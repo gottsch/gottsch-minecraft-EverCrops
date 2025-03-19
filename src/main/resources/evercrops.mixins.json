@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "package": "mod.gottsch.forge.evercrops.core.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "evercrops.refmap.json",
+  "mixins": [
+    "BlockMixin",
+    "CropBlockMixin",
+    "IStemBlockMixin",
+    "StemBlockMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
