@@ -17,7 +17,6 @@
  */
 package mod.gottsch.forge.evercrops.core.mixin;
 
-import mod.gottsch.forge.evercrops.core.EverCrops;
 import mod.gottsch.forge.evercrops.core.persistence.CropRegistry;
 import mod.gottsch.forge.evercrops.core.persistence.CropState;
 import mod.gottsch.forge.evercrops.core.persistence.DimensionalBlockPos;
@@ -38,8 +37,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Optional;
-
 /**
  * @author by Mark Gottschling on 3/14/2025
  */
@@ -59,7 +56,7 @@ public abstract class BlockMixin extends BlockBehaviour implements ItemLike, net
             Block block = (Block)(Object)this;
             if (block instanceof CropBlock
               || block instanceof StemBlock) {
-                EverCrops.LOGGER.debug("update mapDb on setPlacedBy at {}", pos.toShortString());
+//                EverCrops.LOGGER.debug("update mapDb on setPlacedBy at {}", pos.toShortString());
 
                 // get the dimension
                 ResourceLocation dimension = level.dimension().location();
@@ -74,10 +71,12 @@ public abstract class BlockMixin extends BlockBehaviour implements ItemLike, net
 
                 CropRegistry.put(dimPos, cropState);
 
-                if (EverCrops.LOGGER.isDebugEnabled()) {
-                    Optional<CropState> stateCheck = CropRegistry.get(dimPos);
-                    stateCheck.ifPresent(c -> EverCrops.LOGGER.debug("stateCheck -> {}", c));
-                }
+//                if (EverCrops.LOGGER.isDebugEnabled()) {
+//                    Optional<CropState> stateCheck = CropRegistry.get(dimPos);
+//                    stateCheck.ifPresent(c -> EverCrops.LOGGER.de
+//
+//                    .2bug("stateCheck -> {}", c));
+//                }
             }
         }
     }
