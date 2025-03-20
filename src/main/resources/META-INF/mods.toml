@@ -29,7 +29,7 @@ updateJSONURL="https://raw.githubusercontent.com/gottsch/gottsch-minecraft-EverC
 displayURL="https://www.curseforge.com/minecraft/mc-mods/evercrops" #optional
 
 # A file name (in the root of the mod JAR) containing a logo for display
-logoFile="everfurnace_logo.png" #optional
+logoFile="evercrops_logo.png" #optional
 
 # A text field displayed in the mod UI
 credits="" #optional
