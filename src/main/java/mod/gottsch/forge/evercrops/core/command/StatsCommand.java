@@ -25,6 +25,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
 
 import java.util.Map;
 
@@ -70,10 +71,10 @@ public class StatsCommand {
 			totalGrowthDelta += entry.getValue().getTotalGrowthDelta();
 		}
 		if (totalCallCount > 0) {
-			source.sendSystemMessage(Component.literal("call count -> " + String.valueOf(totalCallCount)).withStyle(ChatFormatting.GREEN));
-			source.sendSystemMessage(Component.literal("avg call time -> " + String.valueOf(totalCallDelta / totalCallCount)).withStyle(ChatFormatting.GREEN));
-			source.sendSystemMessage(Component.literal("growth count -> " + String.valueOf(totalGrowthCount)).withStyle(ChatFormatting.GREEN));
-			source.sendSystemMessage(Component.literal("avg growth time -> " + String.valueOf(totalGrowthDelta / totalGrowthCount)).withStyle(ChatFormatting.GREEN));
+			source.sendSuccess(new TextComponent("call count -> " + String.valueOf(totalCallCount)).withStyle(ChatFormatting.GREEN), false);
+			source.sendSuccess(new TextComponent("avg call time -> " + String.valueOf(totalCallDelta / totalCallCount)).withStyle(ChatFormatting.GREEN), false);
+			source.sendSuccess(new TextComponent("growth count -> " + String.valueOf(totalGrowthCount)).withStyle(ChatFormatting.GREEN), false);
+			source.sendSuccess(new TextComponent("avg growth time -> " + String.valueOf(totalGrowthDelta / totalGrowthCount)).withStyle(ChatFormatting.GREEN), false);
 		}
 		return 1;
 	}

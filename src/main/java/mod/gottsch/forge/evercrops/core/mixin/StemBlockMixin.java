@@ -25,7 +25,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
@@ -35,6 +34,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Optional;
+import java.util.Random;
 
 /**
  * almost identical to CropBlockMixin, but need it since StemBlock extends
@@ -56,7 +56,7 @@ public abstract class StemBlockMixin extends BushBlock implements BonemealableBl
     }
 
     @Inject(method = "randomTick", at = @At(value = "HEAD"))
-    public void everCrops_randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource randomSource, CallbackInfo ci) {
+    public void everCrops_randomTick(BlockState state, ServerLevel level, BlockPos pos, Random randomSource, CallbackInfo ci) {
         if (!CropRegistry.isStarted()) {
             return;
         }
@@ -116,7 +116,7 @@ public abstract class StemBlockMixin extends BushBlock implements BonemealableBl
                                     Direction direction = Direction.Plane.HORIZONTAL.getRandomDirection(randomSource);
                                     BlockPos blockpos = pos.relative(direction);
                                     BlockState blockstate = level.getBlockState(blockpos.below());
-                                    if (level.isEmptyBlock(blockpos) && (blockstate.canSustainPlant(level, blockpos.below(), Direction.UP, stemBlock.getFruit()) || blockstate.is(Blocks.FARMLAND) || blockstate.is(BlockTags.DIRT))) {
+                                    if (level.isEmptyBlock(blockpos) && (blockstate.canSustainPlant(level, blockpos.below(), Direction.UP, (StemBlock)(Object)this) || blockstate.is(Blocks.FARMLAND) || blockstate.is(BlockTags.DIRT))) {
 
                                         level.setBlockAndUpdate(blockpos, stemBlock.getFruit().defaultBlockState());
                                         level.setBlockAndUpdate(pos, stemBlock.getFruit().getAttachedStem().defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, direction));
@@ -153,7 +153,7 @@ public abstract class StemBlockMixin extends BushBlock implements BonemealableBl
     }
 
     @Inject(method = "randomTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
-    public void everCrops_randomTick_setBlock(BlockState state, ServerLevel level, BlockPos pos, RandomSource randomSource, CallbackInfo ci) {
+    public void everCrops_randomTick_setBlock(BlockState state, ServerLevel level, BlockPos pos, Random randomSource, CallbackInfo ci) {
         if (!CropRegistry.isStarted()) {
             return;
         }
