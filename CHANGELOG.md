@@ -1,4 +1,4 @@
-# Changelog for EverCrops 1.20.1
+# Changelog for EverCrops 1.19.2
 
 All notable changes to this project will be documented in this file.
 
