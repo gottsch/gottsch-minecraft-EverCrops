@@ -22,7 +22,6 @@ import mod.gottsch.forge.evercrops.core.persistence.data.CropDataRegistry;
 import mod.gottsch.forge.evercrops.core.persistence.data.CropGrowthData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.BonemealableBlock;
 import net.minecraft.world.level.block.BushBlock;
 import net.minecraft.world.level.block.CropBlock;
@@ -33,6 +32,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Optional;
+import java.util.Random;
 
 /**
  * @author by Mark Gottschling on 3/17/2025
@@ -45,7 +45,7 @@ public abstract class CropBlockDataMixin extends BushBlock implements Bonemealab
     }
 
     @Inject(method = "randomTick", at = @At(value = "HEAD"))
-    public void everCrops_randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource randomSource, CallbackInfo ci) {
+    public void everCrops_randomTick(BlockState state, ServerLevel level, BlockPos pos, Random randomSource, CallbackInfo ci) {
         EverCrops.LOGGER.debug("randomTick called... at {}", pos.toShortString());
 
         Optional<CropGrowthData> data = CropDataRegistry.get(pos);
@@ -85,7 +85,7 @@ public abstract class CropBlockDataMixin extends BushBlock implements Bonemealab
     }
 
     @Inject(method = "randomTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
-    public void everCrops_randomTick_setBlock(BlockState state, ServerLevel level, BlockPos pos, RandomSource randomSource, CallbackInfo ci) {
+    public void everCrops_randomTick_setBlock(BlockState state, ServerLevel level, BlockPos pos, Random randomSource, CallbackInfo ci) {
         EverCrops.LOGGER.debug("randomTick.setBlock called... at {}", pos.toShortString());
 
         Optional<CropGrowthData> data = CropDataRegistry.get(pos);
