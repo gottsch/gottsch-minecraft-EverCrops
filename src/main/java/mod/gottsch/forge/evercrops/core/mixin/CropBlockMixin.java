@@ -40,7 +40,7 @@ import java.util.Optional;
  * @author by Mark Gottschling on 3/13/2025
  */
 @Mixin(CropBlock.class)
-public abstract class CropBlockMixin extends BushBlock implements BonemealableBlock {
+public abstract class CropBlockMixin extends BushBlock implements BonemealableBlock, ICropBlockMixin {
 
     @Unique
     private static final int AVG_CALL_TICK_INTERVAL = 1350;
@@ -98,7 +98,7 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
                         long remainder = growthDelta % AVG_GROWTH_TICK_INTERVAL;
                         for (int i = 0; i < quotient; i++) {
                             // apply growth
-                            int age = ((CropBlock) (Object) this).getAge(currentState);
+                            int age = ((ICropBlockMixin) (Object) this).callGetAge(currentState);
                             if (age < ((CropBlock) (Object) this).getMaxAge()) {
 //                                EverCrops.LOGGER.debug("age is still good -> {}", age);
                                 if (net.minecraftforge.common.ForgeHooks.onCropsGrowPre(level, pos, currentState, true)) {
