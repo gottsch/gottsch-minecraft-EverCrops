@@ -20,13 +20,12 @@ package mod.gottsch.forge.evercrops.core.persistence;
 import mod.gottsch.forge.evercrops.core.EverCrops;
 import mod.gottsch.forge.evercrops.core.util.LoggerUtil;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.level.storage.LevelStorageSource;
-import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
+import net.minecraft.world.storage.SaveFormat;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import org.apache.logging.log4j.Level;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
-import org.mapdb.Serializer;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -47,7 +46,7 @@ public class CropRegistry {
     AT: public net.minecraft.server.MinecraftServer f_129744_ # storageSource
     Type: net/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess
      */
-    private static final String SAVE_FORMAT_LEVEL_SAVE_SRG_NAME = "f_129744_";
+    private static final String SAVE_FORMAT_LEVEL_SAVE_SRG_NAME = "field_71310_m";
 
     /*
      * db for mod.
@@ -58,8 +57,8 @@ public class CropRegistry {
 
     public static void start(MinecraftServer server) {
         Optional<Path> worldSavePath = getWorldSaveFolder(server);
-        worldSavePath.ifPresentOrElse(path -> {
-            Path dbPath = Paths.get(path.toString()).toAbsolutePath();
+        if (worldSavePath.isPresent()) {
+            Path dbPath = Paths.get(worldSavePath.get().toString()).toAbsolutePath();
             try {
                 Files.createDirectories(dbPath);
             } catch (IOException e) {
@@ -69,10 +68,10 @@ public class CropRegistry {
 
             db = DBMaker.fileDB(dbPath.resolve(DB_FILE_NAME).toString()).transactionEnable().make();
             map = db.hashMap("cropMap", new DimensionalBlockPos.Serializer(), new CropState.Serializer()).createOrOpen();
-        }, () -> {
+        } else {
 //            throw new RuntimeException("unable to locate world save folder.");
             LoggerUtil.formatLogMessage(Level.ERROR.toString(), "Unable to locate world save folder.");
-        });
+        }
     }
 
     public static void stop() {
@@ -105,10 +104,8 @@ public class CropRegistry {
      */
     private static Optional<Path> getWorldSaveFolder(MinecraftServer server) {
         Object save = ObfuscationReflectionHelper.getPrivateValue(MinecraftServer.class, server, SAVE_FORMAT_LEVEL_SAVE_SRG_NAME);
-        if (save instanceof LevelStorageSource.LevelStorageAccess) {
-            Path path = ((LevelStorageSource.LevelStorageAccess) save)
-                    .getWorldDir().resolve(((LevelStorageSource.LevelStorageAccess) save).getLevelId())
-                    .resolve(EverCrops.MOD_ID);
+        if (save instanceof SaveFormat.LevelSave) {
+            Path path = ((SaveFormat.LevelSave) save).getWorldDir().resolve(EverCrops.MOD_ID);
             return Optional.of(path);
         }
         return Optional.empty();

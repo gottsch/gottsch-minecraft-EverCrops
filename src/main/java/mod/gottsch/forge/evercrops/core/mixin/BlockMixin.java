@@ -20,18 +20,14 @@ package mod.gottsch.forge.evercrops.core.mixin;
 import mod.gottsch.forge.evercrops.core.persistence.CropRegistry;
 import mod.gottsch.forge.evercrops.core.persistence.CropState;
 import mod.gottsch.forge.evercrops.core.persistence.DimensionalBlockPos;
-import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.ItemLike;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.CropBlock;
-import net.minecraft.world.level.block.StemBlock;
-import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.block.*;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.IItemProvider;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.IWorld;
+import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -41,20 +37,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * @author by Mark Gottschling on 3/14/2025
  */
 @Mixin(Block.class)
-public abstract class BlockMixin extends BlockBehaviour implements ItemLike, net.minecraftforge.common.extensions.IForgeBlock {
-    public BlockMixin(Properties properties) {
+public abstract class BlockMixin extends AbstractBlock implements IItemProvider, net.minecraftforge.common.extensions.IForgeBlock {
+    public BlockMixin(AbstractBlock.Properties properties) {
         super(properties);
     }
 
     @Inject(method = "setPlacedBy", at = @At(value = "TAIL"))
-    public void evercrops_setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity entity, ItemStack stack, CallbackInfo ci) {
+    public void evercrops_setPlacedBy(World level, BlockPos pos, BlockState p_180633_3_, LivingEntity entity, ItemStack stack, CallbackInfo ci) {
         if (!CropRegistry.isStarted()) {
             return;
         }
 
         if (!level.isClientSide()) {
             Block block = (Block)(Object)this;
-            if (block instanceof CropBlock
+            if (block instanceof CropsBlock
               || block instanceof StemBlock) {
 //                EverCrops.LOGGER.debug("update mapDb on setPlacedBy at {}", pos.toShortString());
 
@@ -81,15 +77,15 @@ public abstract class BlockMixin extends BlockBehaviour implements ItemLike, net
         }
     }
 
-    @Inject(method = "updateOrDestroy(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;II)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/LevelAccessor;destroyBlock(Lnet/minecraft/core/BlockPos;ZLnet/minecraft/world/entity/Entity;I)Z"))
-    private static void evercrops_destroyBlock(BlockState state, BlockState replaceWithState, LevelAccessor levelAccessor, BlockPos pos, int p_49913_, int p_49914_, CallbackInfo ci) {
+    @Inject(method = "updateOrDestroy(Lnet/minecraft/block/BlockState;Lnet/minecraft/block/BlockState;Lnet/minecraft/world/IWorld;Lnet/minecraft/util/math/BlockPos;II)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/IWorld;destroyBlock(Lnet/minecraft/util/math/BlockPos;ZLnet/minecraft/entity/Entity;I)Z"))
+    private static void evercrops_destroyBlock(BlockState state, BlockState replaceWithState, IWorld world, BlockPos pos, int p_241468_4_, int p_241468_5_, CallbackInfo ci) {
         if (CropRegistry.isStarted()) {
-            if (!levelAccessor.isClientSide()) {
-                if (state.getBlock() instanceof CropBlock
+            if (!world.isClientSide()) {
+                if (state.getBlock() instanceof CropsBlock
                   || state.getBlock() instanceof StemBlock) {
 //                EverCrops.LOGGER.debug("remove crop block from {}", pos.toShortString());
                     // get the dimension
-                    ResourceLocation dimension = ((Level) levelAccessor).dimension().location();
+                    ResourceLocation dimension = ((World) world).dimension().location();
                     CropRegistry.remove(new DimensionalBlockPos(dimension, pos));
                 }
             }

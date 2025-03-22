@@ -17,15 +17,11 @@
  */
 package mod.gottsch.forge.evercrops.core;
 
-import mod.gottsch.forge.evercrops.core.config.Config;
 import mod.gottsch.forge.evercrops.core.persistence.CropRegistry;
-import mod.gottsch.forge.evercrops.core.setup.CommonSetup;
-import net.minecraftforge.event.server.ServerStartingEvent;
-import net.minecraftforge.event.server.ServerStoppingEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
+import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -39,18 +35,14 @@ public class EverCrops {
 
     public static final String MOD_ID = "evercrops";
 
-    public EverCrops(/*FMLJavaModLoadingContext context*/) {
-        Config.register();
-
-        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
-        modEventBus.addListener(CommonSetup::init);
+    public EverCrops() {
 
         // Register the event listener.
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(this);
     }
 
     @SubscribeEvent
-    public void onServerStarting(ServerStartingEvent event) {
+    public void onServerStarting(FMLServerStartingEvent event) {
         EverCrops.LOGGER.debug("level loading event");
         try {
 //            CropDataRegistry.start();
@@ -61,7 +53,7 @@ public class EverCrops {
     }
 
     @SubscribeEvent
-    public void onServerStopping(ServerStoppingEvent event) {
+    public void onServerStopping(FMLServerStoppingEvent event) {
         EverCrops.LOGGER.debug("level unloading event");
         try {
 //            CropDataRegistry.stop();

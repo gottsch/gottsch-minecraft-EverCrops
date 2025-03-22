@@ -1,4 +1,4 @@
-# Changelog for EverCrops 1.18.2
+# Changelog for EverCrops 1.16.5
 
 All notable changes to this project will be documented in this file.
 
@@ -7,3 +7,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0] - 2025-3-21
 - Initial release.
+- Removed dependency on GottschCore. Logs will go to the vanilla log file.
+  (GottschCore Config for 1.16.5 is old and overkill for this mod).

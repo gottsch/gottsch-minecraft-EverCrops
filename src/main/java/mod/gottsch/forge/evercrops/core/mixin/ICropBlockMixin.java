@@ -1,17 +1,14 @@
 package mod.gottsch.forge.evercrops.core.mixin;
 
-import net.minecraft.world.level.block.CropBlock;
-import net.minecraft.world.level.block.StemBlock;
-import net.minecraft.world.level.block.StemGrownBlock;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.CropsBlock;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
 /**
  * @author by Mark Gottschling on 3/20/2025
  */
-@Mixin(CropBlock.class)
+@Mixin(CropsBlock.class)
 public interface ICropBlockMixin {
 
     @Invoker

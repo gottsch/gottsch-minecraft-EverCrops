@@ -19,7 +19,7 @@ package mod.gottsch.forge.evercrops.core.persistence.data;
 
 import mod.gottsch.forge.evercrops.core.EverCrops;
 import mod.gottsch.forge.evercrops.core.persistence.BlockPosSerializer;
-import net.minecraft.core.BlockPos;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;

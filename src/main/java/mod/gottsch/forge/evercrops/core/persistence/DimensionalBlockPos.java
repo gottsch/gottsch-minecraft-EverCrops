@@ -1,7 +1,7 @@
 package mod.gottsch.forge.evercrops.core.persistence;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import org.mapdb.DataInput2;
 import org.mapdb.DataOutput2;
 

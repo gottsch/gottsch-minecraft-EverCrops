@@ -20,13 +20,13 @@ package mod.gottsch.forge.evercrops.core.mixin;
 import mod.gottsch.forge.evercrops.core.persistence.CropRegistry;
 import mod.gottsch.forge.evercrops.core.persistence.CropState;
 import mod.gottsch.forge.evercrops.core.persistence.DimensionalBlockPos;
-import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.block.BonemealableBlock;
-import net.minecraft.world.level.block.BushBlock;
-import net.minecraft.world.level.block.CropBlock;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.BushBlock;
+import net.minecraft.block.CropsBlock;
+import net.minecraft.block.IGrowable;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.server.ServerWorld;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -39,8 +39,8 @@ import java.util.Random;
 /**
  * @author by Mark Gottschling on 3/13/2025
  */
-@Mixin(CropBlock.class)
-public abstract class CropBlockMixin extends BushBlock implements BonemealableBlock, ICropBlockMixin {
+@Mixin(CropsBlock.class)
+public abstract class CropBlockMixin extends BushBlock implements IGrowable, ICropBlockMixin {
 
     @Unique
     private static final int AVG_CALL_TICK_INTERVAL = 1350;
@@ -52,13 +52,13 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
     }
 
     @Inject(method = "randomTick", at = @At(value = "HEAD"))
-    public void everCrops_randomTick(BlockState state, ServerLevel level, BlockPos pos, Random randomSource, CallbackInfo ci) {
+    public void everCrops_randomTick(BlockState state, ServerWorld world, BlockPos pos, Random random, CallbackInfo ci) {
         if (!CropRegistry.isStarted()) {
             return;
         }
 
         // create dimensional pos
-        ResourceLocation dimension = level.dimension().location();
+        ResourceLocation dimension = world.dimension().location();
         DimensionalBlockPos dimPos = new DimensionalBlockPos(dimension, pos);
 //        EverCrops.LOGGER.debug("randomTick called at {}:{}", dimension, pos.toShortString());
 
@@ -67,22 +67,22 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
             // this is where the meat happens
             CropState cropState = cropStateOptional.get();
             // check the delta
-            long delta = level.getGameTime() - cropState.getLastCallGameTime();
+            long delta = world.getGameTime() - cropState.getLastCallGameTime();
 //            EverCrops.LOGGER.debug("call delta -> {}", delta);
             if (delta > AVG_CALL_TICK_INTERVAL * 2) {
 //                EverCrops.LOGGER.debug("greater than 2*call...");
                 // assume that the chunk was unloaded and reloaded
-                long growthDelta = level.getGameTime() - cropState.getLastGrowthGameTime();
+                long growthDelta = world.getGameTime() - cropState.getLastGrowthGameTime();
 //                EverCrops.LOGGER.debug("growth delta -> {}", growthDelta);
                 // if growth delta is > avg*2, then apply growth for how many times the avg goes into the delta
                 if (growthDelta > AVG_GROWTH_TICK_INTERVAL * 2) {
 //                    EverCrops.LOGGER.debug("greater than 2*growth...");
                     boolean grow = false;
 
-                    if (level.getRawBrightness(pos, 0) >= 9) {
+                    if (world.getRawBrightness(pos, 0) >= 9) {
                         // there is enough light, don't need any other info
                         grow = true;
-                    } else if (!level.isDay()) {
+                    } else if (!world.isDay()) {
                         // if day and not enough light, then don't grow.
                         // however, if it is night, need to check previous light levels.
                         if (cropState.getLastCallLightLevel() >= 9) {
@@ -99,37 +99,37 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
                         for (int i = 0; i < quotient; i++) {
                             // apply growth
                             int age = ((ICropBlockMixin) (Object) this).callGetAge(currentState);
-                            if (age < ((CropBlock) (Object) this).getMaxAge()) {
+                            if (age < ((CropsBlock) (Object) this).getMaxAge()) {
 //                                EverCrops.LOGGER.debug("age is still good -> {}", age);
-                                if (net.minecraftforge.common.ForgeHooks.onCropsGrowPre(level, pos, currentState, true)) {
+                                if (net.minecraftforge.common.ForgeHooks.onCropsGrowPre(world, pos, currentState, true)) {
 //                                    EverCrops.LOGGER.debug("growing at -> {}", pos);
-                                    currentState = ((CropBlock) (Object) this).getStateForAge(age + 1);
+                                    currentState = ((CropsBlock) (Object) this).getStateForAge(age + 1);
 //                                    EverCrops.LOGGER.debug("current state.age -> {}", currentState.getValue(CropBlock.AGE));
-                                    level.setBlock(pos, currentState, 3);
-                                    net.minecraftforge.common.ForgeHooks.onCropsGrowPost(level, pos, currentState);
+                                    world.setBlock(pos, currentState, 3);
+                                    net.minecraftforge.common.ForgeHooks.onCropsGrowPost(world, pos, currentState);
                                 }
                             }
                         }
                         // update all properties
-                        cropState.setLastGrowthGameTime(level.getGameTime() - remainder);
-                        cropState.setLastGrowthLightLevel(level.getRawBrightness(pos, 0));
-                        cropState.setLastCallGameTime(level.getGameTime());
-                        cropState.setLastCallLightLevel(level.getRawBrightness(pos, 0));
+                        cropState.setLastGrowthGameTime(world.getGameTime() - remainder);
+                        cropState.setLastGrowthLightLevel(world.getRawBrightness(pos, 0));
+                        cropState.setLastCallGameTime(world.getGameTime());
+                        cropState.setLastCallLightLevel(world.getRawBrightness(pos, 0));
 
                     } else {
                         // update only the call properties
-                        cropState.setLastCallGameTime(level.getGameTime());
-                        cropState.setLastCallLightLevel(level.getRawBrightness(pos, 0));
+                        cropState.setLastCallGameTime(world.getGameTime());
+                        cropState.setLastCallLightLevel(world.getRawBrightness(pos, 0));
                     }
                 }
             } else {
                 // update only the call properties
-                cropState.setLastCallGameTime(level.getGameTime());
-                cropState.setLastCallLightLevel(level.getRawBrightness(pos, 0));
+                cropState.setLastCallGameTime(world.getGameTime());
+                cropState.setLastCallLightLevel(world.getRawBrightness(pos, 0));
             }
             CropRegistry.put(dimPos, cropState);
         } else {
-            CropRegistry.put(dimPos, everCrops_1_20_1$createCropState(level, pos));
+            CropRegistry.put(dimPos, everCrops_1_20_1$createCropState(world, pos));
         }
 //        if (EverCrops.LOGGER.isDebugEnabled()) {
 //            Optional<CropState> stateCheck = CropRegistry.get(dimPos);
@@ -137,8 +137,8 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
 //        }
     }
 
-    @Inject(method = "randomTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
-    public void everCrops_randomTick_setBlock(BlockState state, ServerLevel level, BlockPos pos, Random randomSource, CallbackInfo ci) {
+    @Inject(method = "randomTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/server/ServerWorld;setBlock(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
+    public void everCrops_randomTick_setBlock(BlockState state, ServerWorld level, BlockPos pos, Random randomSource, CallbackInfo ci) {
         if (!CropRegistry.isStarted()) {
             return;
         }
@@ -164,7 +164,7 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
     }
 
     @Unique
-    private CropState everCrops_1_20_1$createCropState(ServerLevel level, BlockPos pos) {
+    private CropState everCrops_1_20_1$createCropState(ServerWorld level, BlockPos pos) {
         CropState cropState = new CropState();
         cropState.setLastCallGameTime(level.getGameTime())
                 .setLastGrowthGameTime(level.getGameTime())

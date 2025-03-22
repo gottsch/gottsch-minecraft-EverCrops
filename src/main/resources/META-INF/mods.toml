@@ -2,7 +2,7 @@
 modLoader="javafml" #mandatory
 
 # A version range to match for said mod loader - for regular FML @Mod it will be the forge version
-loaderVersion="[40,)"
+loaderVersion="[36,)"
 
 # License
 license="GNU GPLv3"
@@ -23,7 +23,7 @@ version="1.0.0" #mandatory
 displayName="EverCrops" #mandatory
 
 # A URL to query for updates for this mod. See the JSON update specification <here>
-updateJSONURL="https://raw.githubusercontent.com/gottsch/gottsch-minecraft-EverCrops/1.18.2-main/update.json" #optional
+updateJSONURL="https://raw.githubusercontent.com/gottsch/gottsch-minecraft-EverCrops/1.16.5-main/update.json" #optional
 
 # A URL for the "homepage" for this mod, displayed in the mod UI
 displayURL="https://www.curseforge.com/minecraft/mc-mods/evercrops" #optional
@@ -47,7 +47,7 @@ modId="forge" #mandatory
 # Does this dependency have to exist - if not, ordering below must be specified
 mandatory=true #mandatory
 # The version range of the dependency
-versionRange="[40,)" #mandatory
+versionRange="[36,)" #mandatory
 # An ordering relationship for the dependency - BEFORE or AFTER required if the relationship is not mandatory
 ordering="NONE"
 # Side this dependency is applied on - BOTH, CLIENT or SERVER
@@ -57,13 +57,6 @@ side="BOTH"
 modId="minecraft"
 mandatory=true
 # This version range declares a minimum of the current minecraft version up to but not including the next major version
-versionRange="[1.18.2,1.19)"
+versionRange="[1.16.5,1.17)"
 ordering="NONE"
-side="BOTH"
-[[dependencies.evercrops]]
-modId="gottschcore"
-mandatory=true
-# This version range declares a minimum of the current minecraft version up to but not including the next major version
-versionRange="[2.0.0,)"
-ordering="BEFORE"
 side="BOTH"

@@ -20,12 +20,11 @@ package mod.gottsch.forge.evercrops.core.command;
 import com.mojang.brigadier.CommandDispatcher;
 import mod.gottsch.forge.evercrops.core.persistence.data.CropDataRegistry;
 import mod.gottsch.forge.evercrops.core.persistence.data.CropGrowthData;
-import net.minecraft.ChatFormatting;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.command.CommandSource;
+import net.minecraft.command.Commands;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
 
 import java.util.Map;
 
@@ -41,7 +40,7 @@ public class StatsCommand {
 	 *
 	 * @param dispatcher
 	 */
-	public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+	public static void register(CommandDispatcher<CommandSource> dispatcher) {
 		dispatcher
 				.register(Commands.literal("evercrops-stats")
 						.requires(source -> {
@@ -56,7 +55,7 @@ public class StatsCommand {
 	/**
 	 * @param source
 	 */
-	private static int stats(CommandSourceStack source) {
+	private static int stats(CommandSource source) {
 
 		int totalCallCount = 0;
 		long totalCallDelta = 0L;
@@ -71,10 +70,10 @@ public class StatsCommand {
 			totalGrowthDelta += entry.getValue().getTotalGrowthDelta();
 		}
 		if (totalCallCount > 0) {
-			source.sendSuccess(new TextComponent("call count -> " + String.valueOf(totalCallCount)).withStyle(ChatFormatting.GREEN), false);
-			source.sendSuccess(new TextComponent("avg call time -> " + String.valueOf(totalCallDelta / totalCallCount)).withStyle(ChatFormatting.GREEN), false);
-			source.sendSuccess(new TextComponent("growth count -> " + String.valueOf(totalGrowthCount)).withStyle(ChatFormatting.GREEN), false);
-			source.sendSuccess(new TextComponent("avg growth time -> " + String.valueOf(totalGrowthDelta / totalGrowthCount)).withStyle(ChatFormatting.GREEN), false);
+			source.sendSuccess(new TranslationTextComponent("call count -> " + String.valueOf(totalCallCount)).withStyle(TextFormatting.GREEN), false);
+			source.sendSuccess(new TranslationTextComponent("avg call time -> " + String.valueOf(totalCallDelta / totalCallCount)).withStyle(TextFormatting.GREEN), false);
+			source.sendSuccess(new TranslationTextComponent("growth count -> " + String.valueOf(totalGrowthCount)).withStyle(TextFormatting.GREEN), false);
+			source.sendSuccess(new TranslationTextComponent("avg growth time -> " + String.valueOf(totalGrowthDelta / totalGrowthCount)).withStyle(TextFormatting.GREEN), false);
 		}
 		return 1;
 	}

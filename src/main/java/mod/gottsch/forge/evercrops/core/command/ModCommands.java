@@ -23,13 +23,13 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * 
+ * this doesn't need to be activated unless gathering pre-mod data.
  * @author Mark Gottschling on Mar 17, 2025
  *
  */
 @Mod.EventBusSubscriber(modid = EverCrops.MOD_ID)
 public class ModCommands {
-	@SubscribeEvent
+//	@SubscribeEvent
 	public static void onServerStarting(RegisterCommandsEvent event) {
 		StatsCommand.register(event.getDispatcher());
 	}
