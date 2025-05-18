@@ -18,13 +18,14 @@
 package mod.gottsch.forge.evercrops.core.persistence.data;
 
 import org.jetbrains.annotations.NotNull;
-import org.mapdb.DataInput2;
-import org.mapdb.DataOutput2;
+//import org.mapdb.DataInput2;
+//import org.mapdb.DataOutput2;
 
 import java.io.IOException;
 import java.util.Objects;
 
 /**
+ *
  * @author by Mark Gottschling on 3/15/2025
  */
 public class CropGrowthData {
@@ -90,57 +91,57 @@ public class CropGrowthData {
         this.totalGrowthDelta = totalGrowthDelta;
     }
 
-    public static class Serializer implements org.mapdb.Serializer<CropGrowthData> {
-
-        @Override
-        public void serialize(@NotNull DataOutput2 out, @NotNull CropGrowthData value) throws IOException {
-            try {
-                out.writeLong(value.getLastCallGameTime());
-                out.writeInt(value.getCallCount());
-                out.writeLong(value.getTotalCallDelta());
-
-                out.writeLong(value.getLastGrowthGameTime());
-                out.writeInt(value.getGrowthCount());
-                out.writeLong(value.getTotalGrowthDelta());
-            } catch (IOException e) {
-                // TODO probably want to handle somehow so the mod doesn't crash
-                throw new RuntimeException(e);
-            }
-        }
-
-        @Override
-        public CropGrowthData deserialize(@NotNull DataInput2 input, int i) throws IOException {
-            try {
-                long lastCallGameTime = input.readLong();
-                int callCount = input.readInt();
-                long callDelta = input.readLong();
-
-                long lastGrowthGameTime = input.readLong();
-                int growthCount = input.readInt();
-                long growthDelta = input.readLong();
-                CropGrowthData data =  new CropGrowthData();
-                data.setLastCallGameTime(lastCallGameTime);
-                data.setCallCount(callCount);
-                data.setTotalCallDelta(callDelta);
-                data.setLastGrowthGameTime(lastGrowthGameTime);
-                data.setGrowthCount(growthCount);
-                data.setTotalGrowthDelta(growthDelta);
-                return data;
-            } catch(IOException e) {
-                throw new RuntimeException();
-            }
-        }
-
-        @Override
-        public int fixedSize() {
-            return 40; // 2 int * 4 bytes + 4 long * 8 bytes
-        }
-
-        @Override
-        public boolean isTrusted() {
-            return true;
-        }
-    }
+//    public static class Serializer implements org.mapdb.Serializer<CropGrowthData> {
+//
+//        @Override
+//        public void serialize(@NotNull DataOutput2 out, @NotNull CropGrowthData value) throws IOException {
+//            try {
+//                out.writeLong(value.getLastCallGameTime());
+//                out.writeInt(value.getCallCount());
+//                out.writeLong(value.getTotalCallDelta());
+//
+//                out.writeLong(value.getLastGrowthGameTime());
+//                out.writeInt(value.getGrowthCount());
+//                out.writeLong(value.getTotalGrowthDelta());
+//            } catch (IOException e) {
+//                // TODO probably want to handle somehow so the mod doesn't crash
+//                throw new RuntimeException(e);
+//            }
+//        }
+//
+//        @Override
+//        public CropGrowthData deserialize(@NotNull DataInput2 input, int i) throws IOException {
+//            try {
+//                long lastCallGameTime = input.readLong();
+//                int callCount = input.readInt();
+//                long callDelta = input.readLong();
+//
+//                long lastGrowthGameTime = input.readLong();
+//                int growthCount = input.readInt();
+//                long growthDelta = input.readLong();
+//                CropGrowthData data =  new CropGrowthData();
+//                data.setLastCallGameTime(lastCallGameTime);
+//                data.setCallCount(callCount);
+//                data.setTotalCallDelta(callDelta);
+//                data.setLastGrowthGameTime(lastGrowthGameTime);
+//                data.setGrowthCount(growthCount);
+//                data.setTotalGrowthDelta(growthDelta);
+//                return data;
+//            } catch(IOException e) {
+//                throw new RuntimeException();
+//            }
+//        }
+//
+//        @Override
+//        public int fixedSize() {
+//            return 40; // 2 int * 4 bytes + 4 long * 8 bytes
+//        }
+//
+//        @Override
+//        public boolean isTrusted() {
+//            return true;
+//        }
+//    }
 
     @Override
     public boolean equals(Object o) {

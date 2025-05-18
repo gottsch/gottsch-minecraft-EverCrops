@@ -17,6 +17,7 @@
  */
 package mod.gottsch.forge.evercrops.core.mixin;
 
+import mod.gottsch.forge.evercrops.core.EverCrops;
 import mod.gottsch.forge.evercrops.core.persistence.CropRegistry;
 import mod.gottsch.forge.evercrops.core.persistence.CropState;
 import mod.gottsch.forge.evercrops.core.persistence.DimensionalBlockPos;
@@ -68,15 +69,15 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
             CropState cropState = cropStateOptional.get();
             // check the delta
             long delta = level.getGameTime() - cropState.getLastCallGameTime();
-//            EverCrops.LOGGER.debug("call delta -> {}", delta);
+            EverCrops.LOGGER.debug("call delta -> {}", delta);
             if (delta > AVG_CALL_TICK_INTERVAL * 2) {
-//                EverCrops.LOGGER.debug("greater than 2*call...");
+                EverCrops.LOGGER.debug("greater than 2*call...");
                 // assume that the chunk was unloaded and reloaded
                 long growthDelta = level.getGameTime() - cropState.getLastGrowthGameTime();
-//                EverCrops.LOGGER.debug("growth delta -> {}", growthDelta);
+                EverCrops.LOGGER.debug("growth delta -> {}", growthDelta);
                 // if growth delta is > avg*2, then apply growth for how many times the avg goes into the delta
                 if (growthDelta > AVG_GROWTH_TICK_INTERVAL * 2) {
-//                    EverCrops.LOGGER.debug("greater than 2*growth...");
+                    EverCrops.LOGGER.debug("greater than 2*growth...");
                     boolean grow = false;
 
                     if (level.getRawBrightness(pos, 0) >= 9) {
@@ -100,11 +101,13 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
                             // apply growth
                             int age = ((CropBlock) (Object) this).getAge(currentState);
                             if (age < ((CropBlock) (Object) this).getMaxAge()) {
-//                                EverCrops.LOGGER.debug("age is still good -> {}", age);
+                                EverCrops.LOGGER.debug("age is still good -> {}", age);
                                 if (net.minecraftforge.common.ForgeHooks.onCropsGrowPre(level, pos, currentState, true)) {
-//                                    EverCrops.LOGGER.debug("growing at -> {}", pos);
+                                    EverCrops.LOGGER.debug("growing at -> {}", pos);
                                     currentState = ((CropBlock) (Object) this).getStateForAge(age + 1);
-//                                    EverCrops.LOGGER.debug("current state.age -> {}", currentState.getValue(CropBlock.AGE));
+                                    if (EverCrops.LOGGER.isDebugEnabled()) {
+                                        EverCrops.LOGGER.debug("current state.age -> {}", currentState.getValue(CropBlock.AGE));
+                                    }
                                     level.setBlock(pos, currentState, 3);
                                     net.minecraftforge.common.ForgeHooks.onCropsGrowPost(level, pos, currentState);
                                 }

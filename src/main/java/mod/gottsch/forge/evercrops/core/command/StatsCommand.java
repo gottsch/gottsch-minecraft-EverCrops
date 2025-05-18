@@ -62,19 +62,20 @@ public class StatsCommand {
 		int totalGrowthCount = 0;
 		long totalGrowthDelta = 0;
 
-		for (Map.Entry<BlockPos, CropGrowthData> entry : CropDataRegistry.dataMap.getEntries()) {
-			totalCallCount += entry.getValue().getCallCount();
-			totalCallDelta += entry.getValue().getTotalCallDelta();
-
-			totalGrowthCount += entry.getValue().getGrowthCount();
-			totalGrowthDelta += entry.getValue().getTotalGrowthDelta();
-		}
-		if (totalCallCount > 0) {
-			source.sendSystemMessage(Component.literal("call count -> " + String.valueOf(totalCallCount)).withStyle(ChatFormatting.GREEN));
-			source.sendSystemMessage(Component.literal("avg call time -> " + String.valueOf(totalCallDelta / totalCallCount)).withStyle(ChatFormatting.GREEN));
-			source.sendSystemMessage(Component.literal("growth count -> " + String.valueOf(totalGrowthCount)).withStyle(ChatFormatting.GREEN));
-			source.sendSystemMessage(Component.literal("avg growth time -> " + String.valueOf(totalGrowthDelta / totalGrowthCount)).withStyle(ChatFormatting.GREEN));
-		}
+		// TODO update to use RocksDb
+//		for (Map.Entry<BlockPos, CropGrowthData> entry : CropDataRegistry.dataMap.getEntries()) {
+//			totalCallCount += entry.getValue().getCallCount();
+//			totalCallDelta += entry.getValue().getTotalCallDelta();
+//
+//			totalGrowthCount += entry.getValue().getGrowthCount();
+//			totalGrowthDelta += entry.getValue().getTotalGrowthDelta();
+//		}
+//		if (totalCallCount > 0) {
+//			source.sendSystemMessage(Component.literal("call count -> " + String.valueOf(totalCallCount)).withStyle(ChatFormatting.GREEN));
+//			source.sendSystemMessage(Component.literal("avg call time -> " + String.valueOf(totalCallDelta / totalCallCount)).withStyle(ChatFormatting.GREEN));
+//			source.sendSystemMessage(Component.literal("growth count -> " + String.valueOf(totalGrowthCount)).withStyle(ChatFormatting.GREEN));
+//			source.sendSystemMessage(Component.literal("avg growth time -> " + String.valueOf(totalGrowthDelta / totalGrowthCount)).withStyle(ChatFormatting.GREEN));
+//		}
 		return 1;
 	}
 }

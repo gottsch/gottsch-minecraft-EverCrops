@@ -17,16 +17,18 @@
  */
 package mod.gottsch.forge.evercrops.core.persistence;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import mod.gottsch.forge.evercrops.core.EverCrops;
 import mod.gottsch.forge.evercrops.core.util.LoggerUtil;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import org.apache.logging.log4j.Level;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
-import org.mapdb.HTreeMap;
-import org.mapdb.Serializer;
+import org.rocksdb.Options;
+import org.rocksdb.RocksDB;
+import org.rocksdb.RocksDBException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -49,54 +51,87 @@ public class CropRegistry {
      */
     private static final String SAVE_FORMAT_LEVEL_SAVE_SRG_NAME = "f_129744_";
 
+    private static ObjectMapper mapper = new ObjectMapper();
+
     /*
      * db for mod.
      */
-    private static final String DB_FILE_NAME = "evercrops.db";
-    private static DB db;
-    private static HTreeMap<DimensionalBlockPos, CropState> map;
+    private static final String DB_FILE_NAME = "evercrops.rocksdb";
+
+    private static RocksDB db;
 
     public static void start(MinecraftServer server) {
+        EverCrops.LOGGER.info("starting server...");
+
+        RocksDB.loadLibrary();
+        mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+
         Optional<Path> worldSavePath = getWorldSaveFolder(server);
         worldSavePath.ifPresentOrElse(path -> {
             Path dbPath = Paths.get(path.toString()).toAbsolutePath();
+
             try {
                 Files.createDirectories(dbPath);
             } catch (IOException e) {
-//                throw new RuntimeException(e);
-                LoggerUtil.formatLogMessage(Level.ERROR.toString(), "Unable to create path -> " + dbPath.toString());
+                LoggerUtil.formatLogMessage(Level.ERROR.toString(), "unable to create path -> " + dbPath.toString());
             }
 
-            db = DBMaker.fileDB(dbPath.resolve(DB_FILE_NAME).toString()).transactionEnable().make();
-            map = db.hashMap("cropMap", new DimensionalBlockPos.Serializer(), new CropState.Serializer()).createOrOpen();
+            try {
+                Options options = new Options().setCreateIfMissing(true);
+                db = RocksDB.open(options, dbPath.resolve(DB_FILE_NAME).toString());
+            } catch(RocksDBException e) {
+                LoggerUtil.formatLogMessage(Level.ERROR.toString(), "unable to instantiate rocks db.");
+            }
         }, () -> {
-//            throw new RuntimeException("unable to locate world save folder.");
-            LoggerUtil.formatLogMessage(Level.ERROR.toString(), "Unable to locate world save folder.");
+            LoggerUtil.formatLogMessage(Level.ERROR.toString(), "unable to locate world save folder.");
         });
     }
 
     public static void stop() {
         db.close();
+        db = null;
     }
 
     public static boolean isStarted() {
-        return db != null && !db.isClosed();
+        return db != null;
     }
 
-    public static Optional<CropState> get(DimensionalBlockPos pos) {
-        return Optional.ofNullable(map.get(pos));
+    public static synchronized Optional<CropState> get(DimensionalBlockPos pos) {
+        EverCrops.LOGGER.debug("get() @ pos -> {}", pos );
+        CropState cropState = null;
+        try {
+            byte[] stateBytes = db.get(mapper.writeValueAsBytes(pos));
+            if (stateBytes == null) return Optional.empty();
+            cropState = mapper.readValue(stateBytes, CropState.class);
+        } catch (RocksDBException | IOException e) {
+            EverCrops.LOGGER.error("error retrieving the entry in RocksDB from key: {}, cause: {}, message: {}", pos, e.getCause(), e.getMessage());
+        }
+        return Optional.ofNullable(cropState);
     }
 
-    public static Optional<CropState> put(DimensionalBlockPos pos, CropState data) {
-        Optional<CropState> value = Optional.ofNullable(map.put(pos, data));
-        db.commit();
-        return value;
+    // NOTE RocksDb does NOT follow a Map interface, and therefor the put
+    // statement does not return the previous value at key position.
+    public static synchronized void put(DimensionalBlockPos pos, CropState state) {
+        EverCrops.LOGGER.debug("put() @ pos ->{}, state -> {}", pos, state);
+        try {
+            byte[] key = mapper.writeValueAsBytes(pos);
+            byte[] data = mapper.writeValueAsBytes(state);
+            try {
+                db.put(key, data);
+            } catch (RocksDBException e) {
+                EverCrops.LOGGER.error("error saving entry in RocksDB, cause: {}, message: {}", e.getCause(), e.getMessage());
+            }
+        } catch(IOException e) {
+            EverCrops.LOGGER.error("error saving entry in RocksDB, cause: {}, message: {}", e.getCause(), e.getMessage());
+        }
     }
 
-    public static Optional<CropState> remove(DimensionalBlockPos pos) {
-        Optional<CropState> value = Optional.ofNullable(map.remove(pos));
-        db.commit();
-        return value;
+    public static void remove(DimensionalBlockPos pos) {
+        try {
+            db.delete(mapper.writeValueAsBytes(pos));
+        } catch (RocksDBException | IOException e) {
+            EverCrops.LOGGER.error("error deleting entry in RocksDB, cause: {}, message: {}", e.getCause(), e.getMessage());
+        }
     }
 
     /**

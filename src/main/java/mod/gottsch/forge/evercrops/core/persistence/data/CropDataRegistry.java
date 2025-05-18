@@ -21,9 +21,6 @@ import mod.gottsch.forge.evercrops.core.EverCrops;
 import mod.gottsch.forge.evercrops.core.persistence.BlockPosSerializer;
 import net.minecraft.core.BlockPos;
 import net.minecraftforge.fml.loading.FMLPaths;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
-import org.mapdb.HTreeMap;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -40,9 +37,9 @@ public class CropDataRegistry {
     /*
      * db for gathering of crop growth data. this db will not be active in the actual mod.
      */
-    private static final String DATA_DB_FILE_NAME = "evercrops_data.db";
-    private static DB dataDb;
-    public static HTreeMap<BlockPos, CropGrowthData> dataMap;
+    private static final String DATA_DB_FILE_NAME = "evercrops_data.rocksdb";
+//    private static DB dataDb;
+//    public static HTreeMap<BlockPos, CropGrowthData> dataMap;
 
     private CropDataRegistry() {}
 
@@ -54,24 +51,27 @@ public class CropDataRegistry {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-        dataDb = DBMaker.fileDB(dbPath.resolve(DATA_DB_FILE_NAME).toString()).transactionEnable().make();
-        dataMap = dataDb.hashMap("dataCropMap", new BlockPosSerializer(), new CropGrowthData.Serializer()).createOrOpen();
+//
+//        dataDb = DBMaker.fileDB(dbPath.resolve(DATA_DB_FILE_NAME).toString()).transactionEnable().make();
+//        dataMap = dataDb.hashMap("dataCropMap", new BlockPosSerializer(), new CropGrowthData.Serializer()).createOrOpen();
     }
 
     public static void stop() {
-        dataDb.close();
+//        dataDb.close();
     }
 
     public static Optional<CropGrowthData> get(BlockPos pos) {
-        return Optional.ofNullable(dataMap.get(pos));
+
+//        return Optional.ofNullable(dataMap.get(pos));
+        return Optional.empty();
     }
 
     public static Optional<CropGrowthData> put(BlockPos pos, CropGrowthData data) {
-        return Optional.ofNullable(dataMap.put(pos, data));
+//        return Optional.ofNullable(dataMap.put(pos, data));
+        return Optional.empty();
     }
 
     public static void commit() {
-        dataDb.commit();
+//        dataDb.commit();
     }
 }

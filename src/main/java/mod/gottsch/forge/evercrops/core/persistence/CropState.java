@@ -18,8 +18,7 @@
 package mod.gottsch.forge.evercrops.core.persistence;
 
 import org.jetbrains.annotations.NotNull;
-import org.mapdb.DataInput2;
-import org.mapdb.DataOutput2;
+
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -95,47 +94,48 @@ public class CropState implements Serializable {
                 '}';
     }
 
-    public static class Serializer implements org.mapdb.Serializer<CropState> {
-
-        @Override
-        public void serialize(@NotNull DataOutput2 out, @NotNull CropState cropState) throws IOException {
-            try {
-                out.writeLong(cropState.getLastCallGameTime());
-                out.writeLong(cropState.getLastGrowthGameTime());
-                out.writeInt(cropState.getLastCallLightLevel());
-                out.writeInt(cropState.getLastGrowthLightLevel());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        @Override
-        public CropState deserialize(@NotNull DataInput2 input, int i) throws IOException {
-            try {
-                long lastCallGameTime = input.readLong();
-                long lastGrowthGameTime = input.readLong();
-                int lastCallLightLevel = input.readInt();
-                int lastGrowthLightLevel = input.readInt();
-                CropState data =  new CropState();
-                data
-                    .setLastCallGameTime(lastCallGameTime)
-                    .setLastGrowthGameTime(lastGrowthGameTime)
-                    .setLastCallLightLevel(lastCallLightLevel)
-                    .setLastGrowthLightLevel(lastGrowthLightLevel);
-                return data;
-            } catch(IOException e) {
-                throw new RuntimeException();
-            }
-        }
-
-        @Override
-        public int fixedSize() {
-            return 24; // 2 int * 4 bytes + 2 long * 8 bytes
-        }
-
-        @Override
-        public boolean isTrusted() {
-            return true;
-        }
-    }
+    // TODO replace with RocksDb
+//    public static class Serializer implements org.mapdb.Serializer<CropState> {
+//
+//        @Override
+//        public void serialize(@NotNull DataOutput2 out, @NotNull CropState cropState) throws IOException {
+//            try {
+//                out.writeLong(cropState.getLastCallGameTime());
+//                out.writeLong(cropState.getLastGrowthGameTime());
+//                out.writeInt(cropState.getLastCallLightLevel());
+//                out.writeInt(cropState.getLastGrowthLightLevel());
+//            } catch (IOException e) {
+//                throw new RuntimeException(e);
+//            }
+//        }
+//
+//        @Override
+//        public CropState deserialize(@NotNull DataInput2 input, int i) throws IOException {
+//            try {
+//                long lastCallGameTime = input.readLong();
+//                long lastGrowthGameTime = input.readLong();
+//                int lastCallLightLevel = input.readInt();
+//                int lastGrowthLightLevel = input.readInt();
+//                CropState data =  new CropState();
+//                data
+//                    .setLastCallGameTime(lastCallGameTime)
+//                    .setLastGrowthGameTime(lastGrowthGameTime)
+//                    .setLastCallLightLevel(lastCallLightLevel)
+//                    .setLastGrowthLightLevel(lastGrowthLightLevel);
+//                return data;
+//            } catch(IOException e) {
+//                throw new RuntimeException();
+//            }
+//        }
+//
+//        @Override
+//        public int fixedSize() {
+//            return 24; // 2 int * 4 bytes + 2 long * 8 bytes
+//        }
+//
+//        @Override
+//        public boolean isTrusted() {
+//            return true;
+//        }
+//    }
 }
