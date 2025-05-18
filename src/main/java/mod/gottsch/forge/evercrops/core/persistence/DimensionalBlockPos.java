@@ -1,11 +1,25 @@
+/*
+ * This file is part of EverCrops.
+ * Copyright (c) 2025 Mark Gottschling (gottsch)
+ *
+ * EverCrops is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * EverCrops is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with EverCrops.  If not, see <http://www.gnu.org/licenses/lgpl>.
+ */
 package mod.gottsch.forge.evercrops.core.persistence;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
-import org.mapdb.DataInput2;
-import org.mapdb.DataOutput2;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -59,36 +73,11 @@ public class DimensionalBlockPos implements Serializable {
         this.pos = pos;
     }
 
-    public static class Serializer implements org.mapdb.Serializer<DimensionalBlockPos> {
-
-        @Override
-        public void serialize(DataOutput2 out, DimensionalBlockPos value) {
-            try {
-                out.writeUTF(value.dimension.toString());
-                out.writeInt(value.pos.getX());
-                out.writeInt(value.pos.getY());
-                out.writeInt(value.pos.getZ());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        @Override
-        public DimensionalBlockPos deserialize(DataInput2 input, int available) {
-            try {
-                String dimension = input.readUTF();
-                int x = input.readInt();
-                int y = input.readInt();
-                int z = input.readInt();
-                return new DimensionalBlockPos(dimension, x, y, z);
-            } catch(IOException e) {
-                throw new RuntimeException();
-            }
-        }
-
-        @Override
-        public boolean isTrusted() {
-            return true;
-        }
+    @Override
+    public String toString() {
+        return "DimensionalBlockPos{" +
+                "dimension=" + dimension +
+                ", pos=" + pos +
+                '}';
     }
 }

@@ -50,8 +50,9 @@ public abstract class BlockDataMixin extends BlockBehaviour implements ItemLike,
     public void everCrops_setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity entity, ItemStack stack, CallbackInfo ci) {
         if (!level.isClientSide()) {
             if ((Block)(Object)this instanceof CropBlock) {
-                EverCrops.LOGGER.debug("update MapDb on setPlacedBy at {}", pos.toShortString());
-
+                if (EverCrops.LOGGER.isDebugEnabled()) {
+                    EverCrops.LOGGER.debug("update RocksDb on setPlacedBy at {}", pos.toShortString());
+                }
                 Optional<CropGrowthData> data = CropDataRegistry.get(pos);
                 if (data.isPresent()) {
                     // retain any previous data and reset the last game times

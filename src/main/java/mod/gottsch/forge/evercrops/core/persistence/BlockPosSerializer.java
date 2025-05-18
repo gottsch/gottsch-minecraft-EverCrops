@@ -17,47 +17,45 @@
  */
 package mod.gottsch.forge.evercrops.core.persistence;
 
-import net.minecraft.core.BlockPos;
-import org.mapdb.DataInput2;
-import org.mapdb.DataOutput2;
-import org.mapdb.Serializer;
 
 import java.io.IOException;
 /**
  * @author by Mark Gottschling on 3/13/2025
  */
-public class BlockPosSerializer implements Serializer<BlockPos> {
+// TODO update with RocksDb
+public class BlockPosSerializer {
+//        implements Serializer<BlockPos> {
 
-    @Override
-    public void serialize(DataOutput2 out, BlockPos value) {
-        try {
-            out.writeInt(value.getX());
-            out.writeInt(value.getY());
-            out.writeInt(value.getZ());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public BlockPos deserialize(DataInput2 input, int available) {
-        try {
-            int x = input.readInt();
-            int y = input.readInt();
-            int z = input.readInt();
-            return new BlockPos(x, y, z);
-        } catch(IOException e) {
-            throw new RuntimeException();
-        }
-    }
-
-    @Override
-    public int fixedSize() {
-        return 12; // 3 ints * 4 bytes each
-    }
-
-    @Override
-    public boolean isTrusted() {
-        return true;
-    }
+//    @Override
+//    public void serialize(DataOutput2 out, BlockPos value) {
+//        try {
+//            out.writeInt(value.getX());
+//            out.writeInt(value.getY());
+//            out.writeInt(value.getZ());
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+//
+//    @Override
+//    public BlockPos deserialize(DataInput2 input, int available) {
+//        try {
+//            int x = input.readInt();
+//            int y = input.readInt();
+//            int z = input.readInt();
+//            return new BlockPos(x, y, z);
+//        } catch(IOException e) {
+//            throw new RuntimeException();
+//        }
+//    }
+//
+//    @Override
+//    public int fixedSize() {
+//        return 12; // 3 ints * 4 bytes each
+//    }
+//
+//    @Override
+//    public boolean isTrusted() {
+//        return true;
+//    }
 }
