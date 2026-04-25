@@ -32,5 +32,6 @@ public class ModCommands {
 	@SubscribeEvent
 	public static void onServerStarting(RegisterCommandsEvent event) {
 		StatsCommand.register(event.getDispatcher());
+		EverCropsCommand.register(event.getDispatcher());
 	}
 }

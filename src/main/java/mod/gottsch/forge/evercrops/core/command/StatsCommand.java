@@ -18,15 +18,8 @@
 package mod.gottsch.forge.evercrops.core.command;
 
 import com.mojang.brigadier.CommandDispatcher;
-import mod.gottsch.forge.evercrops.core.persistence.data.CropDataRegistry;
-import mod.gottsch.forge.evercrops.core.persistence.data.CropGrowthData;
-import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
-
-import java.util.Map;
 
 
 /**
