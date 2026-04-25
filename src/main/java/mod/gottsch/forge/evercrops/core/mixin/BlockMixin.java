@@ -19,9 +19,8 @@ package mod.gottsch.forge.evercrops.core.mixin;
 
 import mod.gottsch.forge.evercrops.core.persistence.CropRegistry;
 import mod.gottsch.forge.evercrops.core.persistence.CropState;
-import mod.gottsch.forge.evercrops.core.persistence.DimensionalBlockPos;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ItemLike;
@@ -42,57 +41,36 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(Block.class)
 public abstract class BlockMixin extends BlockBehaviour implements ItemLike, net.minecraftforge.common.extensions.IForgeBlock {
+
     public BlockMixin(Properties properties) {
         super(properties);
     }
 
     @Inject(method = "setPlacedBy", at = @At(value = "TAIL"))
     public void evercrops_setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity entity, ItemStack stack, CallbackInfo ci) {
-        if (!CropRegistry.isStarted()) {
+        if (level.isClientSide()) {
             return;
         }
-
-        if (!level.isClientSide()) {
-            Block block = (Block)(Object)this;
-            if (block instanceof CropBlock
-              || block instanceof StemBlock) {
-//                EverCrops.LOGGER.debug("update mapDb on setPlacedBy at {}", pos.toShortString());
-
-                // get the dimension
-                ResourceLocation dimension = level.dimension().location();
-                DimensionalBlockPos dimPos = new DimensionalBlockPos(dimension, pos);
-
-                // create a new CropState to record current state
-                CropState cropState = new CropState();
-                cropState.setLastCallGameTime(level.getGameTime())
-                        .setLastGrowthGameTime(level.getGameTime())
-                        .setLastCallLightLevel(level.getRawBrightness(pos, 0))
-                        .setLastGrowthLightLevel(level.getRawBrightness(pos, 0));
-
-                CropRegistry.put(dimPos, cropState);
-
-//                if (EverCrops.LOGGER.isDebugEnabled()) {
-//                    Optional<CropState> stateCheck = CropRegistry.get(dimPos);
-//                    stateCheck.ifPresent(c -> EverCrops.LOGGER.de
-//
-//                    .2bug("stateCheck -> {}", c));
-//                }
-            }
+        Block block = (Block) (Object) this;
+        if ((block instanceof CropBlock && state.hasProperty(CropBlock.AGE))
+                || (block instanceof StemBlock && state.hasProperty(StemBlock.AGE))) {
+            ServerLevel serverLevel = (ServerLevel) level;
+            CropState cropState = new CropState();
+            cropState.setLastCallGameTime(serverLevel.getGameTime())
+                    .setLastGrowthGameTime(serverLevel.getGameTime())
+                    .setLastCallLightLevel(serverLevel.getRawBrightness(pos, 0))
+                    .setLastGrowthLightLevel(serverLevel.getRawBrightness(pos, 0));
+            CropRegistry.put(serverLevel, pos, cropState);
         }
     }
 
     @Inject(method = "updateOrDestroy(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/LevelAccessor;Lnet/minecraft/core/BlockPos;II)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/LevelAccessor;destroyBlock(Lnet/minecraft/core/BlockPos;ZLnet/minecraft/world/entity/Entity;I)Z"))
     private static void evercrops_destroyBlock(BlockState state, BlockState replaceWithState, LevelAccessor levelAccessor, BlockPos pos, int p_49913_, int p_49914_, CallbackInfo ci) {
-        if (CropRegistry.isStarted()) {
-            if (!levelAccessor.isClientSide()) {
-                if (state.getBlock() instanceof CropBlock
-                  || state.getBlock() instanceof StemBlock) {
-//                EverCrops.LOGGER.debug("remove crop block from {}", pos.toShortString());
-                    // get the dimension
-                    ResourceLocation dimension = ((Level) levelAccessor).dimension().location();
-                    CropRegistry.remove(new DimensionalBlockPos(dimension, pos));
-                }
-            }
+        if (levelAccessor.isClientSide()) {
+            return;
+        }
+        if (state.getBlock() instanceof CropBlock || state.getBlock() instanceof StemBlock) {
+            CropRegistry.remove((ServerLevel) levelAccessor, pos);
         }
     }
 }

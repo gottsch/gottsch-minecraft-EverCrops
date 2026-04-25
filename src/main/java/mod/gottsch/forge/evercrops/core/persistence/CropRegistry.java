@@ -17,135 +17,29 @@
  */
 package mod.gottsch.forge.evercrops.core.persistence;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import mod.gottsch.forge.evercrops.core.EverCrops;
-import mod.gottsch.forge.evercrops.core.util.LoggerUtil;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.level.storage.LevelStorageSource;
-import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
-import org.apache.logging.log4j.Level;
-import org.rocksdb.Options;
-import org.rocksdb.RocksDB;
-import org.rocksdb.RocksDBException;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 
 /**
- * this is the working registry used for the mod.
+ * Static facade over {@link CropSavedData}.
+ * SavedData is always available for a loaded ServerLevel — no explicit
+ * start/stop lifecycle is needed.
  *
- * @author by Mark Gottschling on 3/16/2025
+ * @author Mark Gottschling on 4/25/2025
  */
 public class CropRegistry {
-    /*
-    MC 1.18.2: net/minecraft/server/MinecraftServer.storageSource
-    Name: l => f_129744_ => storageSource
-    Side: BOTH
-    AT: public net.minecraft.server.MinecraftServer f_129744_ # storageSource
-    Type: net/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess
-     */
-    private static final String SAVE_FORMAT_LEVEL_SAVE_SRG_NAME = "f_129744_";
 
-    private static ObjectMapper mapper = new ObjectMapper();
-
-    /*
-     * db for mod.
-     */
-    private static final String DB_FILE_NAME = "evercrops.rocksdb";
-
-    private static RocksDB db;
-
-    public static void start(MinecraftServer server) {
-        EverCrops.LOGGER.info("starting server...");
-
-        RocksDB.loadLibrary();
-        mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-
-        Optional<Path> worldSavePath = getWorldSaveFolder(server);
-        worldSavePath.ifPresentOrElse(path -> {
-            Path dbPath = Paths.get(path.toString()).toAbsolutePath();
-
-            try {
-                Files.createDirectories(dbPath);
-            } catch (IOException e) {
-                LoggerUtil.formatLogMessage(Level.ERROR.toString(), "unable to create path -> " + dbPath.toString());
-            }
-
-            try {
-                Options options = new Options().setCreateIfMissing(true);
-                db = RocksDB.open(options, dbPath.resolve(DB_FILE_NAME).toString());
-            } catch(RocksDBException e) {
-                LoggerUtil.formatLogMessage(Level.ERROR.toString(), "unable to instantiate rocks db.");
-            }
-        }, () -> {
-            LoggerUtil.formatLogMessage(Level.ERROR.toString(), "unable to locate world save folder.");
-        });
+    public static Optional<CropState> get(ServerLevel level, BlockPos pos) {
+        return CropSavedData.getOrCreate(level).get(pos);
     }
 
-    public static void stop() {
-        db.close();
-        db = null;
+    public static void put(ServerLevel level, BlockPos pos, CropState state) {
+        CropSavedData.getOrCreate(level).put(pos, state);
     }
 
-    public static boolean isStarted() {
-        return db != null;
-    }
-
-    public static synchronized Optional<CropState> get(DimensionalBlockPos pos) {
-        EverCrops.LOGGER.debug("get() @ pos -> {}", pos );
-        CropState cropState = null;
-        try {
-            byte[] stateBytes = db.get(mapper.writeValueAsBytes(pos));
-            if (stateBytes == null) return Optional.empty();
-            cropState = mapper.readValue(stateBytes, CropState.class);
-        } catch (RocksDBException | IOException e) {
-            EverCrops.LOGGER.error("error retrieving the entry in RocksDB from key: {}, cause: {}, message: {}", pos, e.getCause(), e.getMessage());
-        }
-        return Optional.ofNullable(cropState);
-    }
-
-    // NOTE RocksDb does NOT follow a Map interface, and therefor the put
-    // statement does not return the previous value at key position.
-    public static synchronized void put(DimensionalBlockPos pos, CropState state) {
-        EverCrops.LOGGER.debug("put() @ pos ->{}, state -> {}", pos, state);
-        try {
-            byte[] key = mapper.writeValueAsBytes(pos);
-            byte[] data = mapper.writeValueAsBytes(state);
-            try {
-                db.put(key, data);
-            } catch (RocksDBException e) {
-                EverCrops.LOGGER.error("error saving entry in RocksDB, cause: {}, message: {}", e.getCause(), e.getMessage());
-            }
-        } catch(IOException e) {
-            EverCrops.LOGGER.error("error saving entry in RocksDB, cause: {}, message: {}", e.getCause(), e.getMessage());
-        }
-    }
-
-    public static void remove(DimensionalBlockPos pos) {
-        try {
-            db.delete(mapper.writeValueAsBytes(pos));
-        } catch (RocksDBException | IOException e) {
-            EverCrops.LOGGER.error("error deleting entry in RocksDB, cause: {}, message: {}", e.getCause(), e.getMessage());
-        }
-    }
-
-    /**
-     * @param server
-     * @return
-     */
-    private static Optional<Path> getWorldSaveFolder(MinecraftServer server) {
-        Object save = ObfuscationReflectionHelper.getPrivateValue(MinecraftServer.class, server, SAVE_FORMAT_LEVEL_SAVE_SRG_NAME);
-        if (save instanceof LevelStorageSource.LevelStorageAccess) {
-            Path path = ((LevelStorageSource.LevelStorageAccess) save)
-                    .getWorldDir().resolve(((LevelStorageSource.LevelStorageAccess) save).getLevelId())
-                    .resolve(EverCrops.MOD_ID);
-            return Optional.of(path);
-        }
-        return Optional.empty();
+    public static void remove(ServerLevel level, BlockPos pos) {
+        CropSavedData.getOrCreate(level).remove(pos);
     }
 }
