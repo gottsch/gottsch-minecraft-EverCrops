@@ -19,9 +19,9 @@ package mod.gottsch.forge.evercrops.core;
 
 import mod.gottsch.forge.evercrops.core.config.Config;
 import mod.gottsch.forge.evercrops.core.setup.CommonSetup;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.Mod;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -35,10 +35,8 @@ public class EverCrops {
 
     public static final String MOD_ID = "evercrops";
 
-    public EverCrops() {
-        Config.register();
-
-        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+    public EverCrops(IEventBus modEventBus, ModContainer modContainer) {
+        Config.register(modContainer);
         modEventBus.addListener(CommonSetup::init);
     }
 }

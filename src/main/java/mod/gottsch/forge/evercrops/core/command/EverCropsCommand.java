@@ -122,7 +122,7 @@ public class EverCropsCommand {
                 BlockState state = level.getBlockState(pos);
                 // only tick blocks that are actually loaded and randomly ticking
                 if (state.isRandomlyTicking()) {
-                    state.getBlock().randomTick(state, level, pos, level.getRandom());
+                    state.randomTick(level, pos, level.getRandom());
                     triggered++;
                 }
             }

@@ -17,10 +17,10 @@
  */
 package mod.gottsch.forge.evercrops.core.config;
 
-import mod.gottsch.forge.gottschcore.config.AbstractConfig;
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.config.ModConfig;
+import mod.gottsch.neo.gottschcore.config.AbstractConfig;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
@@ -28,14 +28,13 @@ import org.apache.commons.lang3.tuple.Pair;
  */
 public class Config extends AbstractConfig {
 
-    public static final ForgeConfigSpec COMMON_SPEC;
+    public static final ModConfigSpec COMMON_SPEC;
     public static final CommonConfig COMMON;
 
-    // setup as a singleton
     public static Config instance = new Config();
 
     static {
-        final Pair<CommonConfig, ForgeConfigSpec> commonSpecPair = new ForgeConfigSpec.Builder()
+        final Pair<CommonConfig, ModConfigSpec> commonSpecPair = new ModConfigSpec.Builder()
                 .configure(CommonConfig::new);
         COMMON_SPEC = commonSpecPair.getRight();
         COMMON = commonSpecPair.getLeft();
@@ -43,17 +42,13 @@ public class Config extends AbstractConfig {
 
     private Config() {}
 
-    public static void register() {
-        registerCommonConfig();
-    }
-
-    private static void registerCommonConfig() {
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, COMMON_SPEC);
+    public static void register(ModContainer modContainer) {
+        modContainer.registerConfig(ModConfig.Type.COMMON, COMMON_SPEC);
     }
 
     public static class CommonConfig {
         public static Logging logging;
-        public CommonConfig(ForgeConfigSpec.Builder builder) {
+        public CommonConfig(ModConfigSpec.Builder builder) {
             logging = new Logging(builder);
         }
     }

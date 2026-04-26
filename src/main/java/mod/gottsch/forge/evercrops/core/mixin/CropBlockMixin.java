@@ -27,6 +27,7 @@ import net.minecraft.world.level.block.BonemealableBlock;
 import net.minecraft.world.level.block.BushBlock;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.common.CommonHooks;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -52,9 +53,6 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
 
     @Inject(method = "randomTick", at = @At(value = "HEAD"))
     public void everCrops_randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource randomSource, CallbackInfo ci) {
-        // Some mods extend CropBlock but register blocks whose StateDefinition doesn't
-        // include this block's age property (e.g. vanilla flower blocks used as crop stubs).
-        // Calling getAge() on such a state throws IllegalArgumentException.
         if (!state.hasProperty(CropBlock.AGE)) {
             return;
         }
@@ -90,14 +88,14 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
                             int age = ((CropBlock) (Object) this).getAge(currentState);
                             if (age < ((CropBlock) (Object) this).getMaxAge()) {
                                 EverCrops.LOGGER.debug("age is still good -> {}", age);
-                                if (net.minecraftforge.common.ForgeHooks.onCropsGrowPre(level, pos, currentState, true)) {
+                                if (CommonHooks.canCropGrow(level, pos, currentState, true)) {
                                     EverCrops.LOGGER.debug("growing at -> {}", pos);
                                     currentState = ((CropBlock) (Object) this).getStateForAge(age + 1);
                                     if (EverCrops.LOGGER.isDebugEnabled()) {
                                         EverCrops.LOGGER.debug("current state.age -> {}", currentState.getValue(CropBlock.AGE));
                                     }
                                     level.setBlock(pos, currentState, 3);
-                                    net.minecraftforge.common.ForgeHooks.onCropsGrowPost(level, pos, currentState);
+                                    CommonHooks.fireCropGrowPost(level, pos, currentState);
                                 }
                             }
                         }

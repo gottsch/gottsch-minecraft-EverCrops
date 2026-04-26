@@ -41,7 +41,7 @@ import java.util.Optional;
  * @author by Mark Gottschling on 3/14/2025
  */
 @Mixin(Block.class)
-public abstract class BlockDataMixin extends BlockBehaviour implements ItemLike, net.minecraftforge.common.extensions.IForgeBlock {
+public abstract class BlockDataMixin extends BlockBehaviour implements ItemLike, net.neoforged.neoforge.common.extensions.IBlockExtension {
     public BlockDataMixin(Properties properties) {
         super(properties);
     }

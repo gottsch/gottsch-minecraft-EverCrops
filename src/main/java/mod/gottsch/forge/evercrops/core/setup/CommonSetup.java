@@ -19,21 +19,17 @@ package mod.gottsch.forge.evercrops.core.setup;
 
 import mod.gottsch.forge.evercrops.core.EverCrops;
 import mod.gottsch.forge.evercrops.core.config.Config;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 
 /**
+ * Registered manually as a listener via {@code modEventBus.addListener(CommonSetup::init)}
+ * in {@link EverCrops}, so no @EventBusSubscriber annotation here.
+ *
  * @author by Mark Gottschling on 3/14/2025
  */
-@Mod.EventBusSubscriber(modid = EverCrops.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class CommonSetup {
 
-    /**
-     *
-     * @param event
-     */
     public static void init(final FMLCommonSetupEvent event) {
-        // create a treasure2 specific log file
         Config.instance.addRollingFileAppender(EverCrops.MOD_ID);
         EverCrops.LOGGER.debug("file appender created");
     }

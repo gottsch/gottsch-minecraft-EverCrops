@@ -50,14 +50,17 @@ public class CropSavedData extends SavedData {
     // -------------------------------------------------
 
     public static CropSavedData getOrCreate(ServerLevel level) {
-        return level.getDataStorage().computeIfAbsent(CropSavedData::load, CropSavedData::new, DATA_NAME);
+        return level.getDataStorage().computeIfAbsent(
+                new SavedData.Factory<>(CropSavedData::new, CropSavedData::load, null),
+                DATA_NAME
+        );
     }
 
     // -------------------------------------------------
     // Serialization
     // -------------------------------------------------
 
-    public static CropSavedData load(CompoundTag tag) {
+    public static CropSavedData load(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
         CropSavedData data = new CropSavedData();
         ListTag list = tag.getList("crops", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
@@ -74,7 +77,7 @@ public class CropSavedData extends SavedData {
     }
 
     @Override
-    public CompoundTag save(CompoundTag tag) {
+    public CompoundTag save(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
         ListTag list = new ListTag();
         for (Map.Entry<Long, CropState> entry : crops.entrySet()) {
             CompoundTag e = new CompoundTag();

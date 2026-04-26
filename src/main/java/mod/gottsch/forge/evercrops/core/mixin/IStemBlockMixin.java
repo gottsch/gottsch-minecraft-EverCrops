@@ -1,7 +1,8 @@
 package mod.gottsch.forge.evercrops.core.mixin;
 
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.StemBlock;
-import net.minecraft.world.level.block.StemGrownBlock;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
@@ -12,5 +13,8 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface IStemBlockMixin {
 
     @Accessor
-    StemGrownBlock getFruit();
+    ResourceKey<Block> getFruit();
+
+    @Accessor
+    ResourceKey<Block> getAttachedStem();
 }

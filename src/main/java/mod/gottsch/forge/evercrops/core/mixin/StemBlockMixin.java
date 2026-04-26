@@ -21,11 +21,15 @@ import mod.gottsch.forge.evercrops.core.persistence.CropRegistry;
 import mod.gottsch.forge.evercrops.core.persistence.CropState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.common.CommonHooks;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -54,8 +58,6 @@ public abstract class StemBlockMixin extends BushBlock implements BonemealableBl
 
     @Inject(method = "randomTick", at = @At(value = "HEAD"))
     public void everCrops_randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource randomSource, CallbackInfo ci) {
-        // Guard against mods that extend StemBlock but use block states that don't have
-        // the AGE property (e.g. decorative stem-like blocks).
         if (!state.hasProperty(StemBlock.AGE)) {
             return;
         }
@@ -84,7 +86,7 @@ public abstract class StemBlockMixin extends BushBlock implements BonemealableBl
                         int quotient = (int) (Math.floor((double) growthDelta / AVG_GROWTH_TICK_INTERVAL));
                         long remainder = growthDelta % AVG_GROWTH_TICK_INTERVAL;
                         for (int i = 0; i < quotient; i++) {
-                            if (net.minecraftforge.common.ForgeHooks.onCropsGrowPre(level, pos, currentState, true)) {
+                            if (CommonHooks.canCropGrow(level, pos, currentState, true)) {
                                 int age = currentState.getValue(StemBlock.AGE);
                                 if (age < 7) {
                                     currentState = currentState.setValue(StemBlock.AGE, age + 1);
@@ -94,12 +96,17 @@ public abstract class StemBlockMixin extends BushBlock implements BonemealableBl
                                     Direction direction = Direction.Plane.HORIZONTAL.getRandomDirection(randomSource);
                                     BlockPos blockpos = pos.relative(direction);
                                     BlockState blockstate = level.getBlockState(blockpos.below());
-                                    if (level.isEmptyBlock(blockpos) && (blockstate.canSustainPlant(level, blockpos.below(), Direction.UP, stemBlock.getFruit()) || blockstate.is(Blocks.FARMLAND) || blockstate.is(BlockTags.DIRT))) {
-                                        level.setBlockAndUpdate(blockpos, stemBlock.getFruit().defaultBlockState());
-                                        level.setBlockAndUpdate(pos, stemBlock.getFruit().getAttachedStem().defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, direction));
+                                    if (level.getBlockState(blockpos).isAir() && (blockstate.is(Blocks.FARMLAND) || blockstate.is(BlockTags.DIRT))) {
+                                        Registry<Block> registry = level.registryAccess().registryOrThrow(Registries.BLOCK);
+                                        Optional<Block> fruit = registry.getOptional(stemBlock.getFruit());
+                                        Optional<Block> attachedStem = registry.getOptional(stemBlock.getAttachedStem());
+                                        if (fruit.isPresent() && attachedStem.isPresent()) {
+                                            level.setBlockAndUpdate(blockpos, fruit.get().defaultBlockState());
+                                            level.setBlockAndUpdate(pos, attachedStem.get().defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, direction));
+                                        }
                                     }
                                 }
-                                net.minecraftforge.common.ForgeHooks.onCropsGrowPost(level, pos, currentState);
+                                CommonHooks.fireCropGrowPost(level, pos, currentState);
                             }
                         }
                         cropState.setLastGrowthGameTime(level.getGameTime() - remainder);
