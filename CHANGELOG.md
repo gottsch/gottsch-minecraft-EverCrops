@@ -20,18 +20,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed crash (`IllegalArgumentException: Cannot get property age`) caused by mods that extend `CropBlock` or `StemBlock` but register blocks (e.g. `minecraft:oxeye_daisy`) whose `StateDefinition` does not include the standard age property. The mixin now guards all age-property access and skips incompatible blocks silently.
-
-## [2.0.0] - 2025-5-16
-
-### Changed
-
-- Switched from MapDb to RocksDb for Crop management.
-
-## [1.0.1] - 2025-3-21
-
-### Changed
-
-- Added gottschcore dependency to mods.toml
-
-## [1.0.0] - 2025-3-19
-- Initial release.
