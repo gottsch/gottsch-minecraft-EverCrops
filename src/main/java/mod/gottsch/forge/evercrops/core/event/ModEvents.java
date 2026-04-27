@@ -18,12 +18,16 @@
 package mod.gottsch.forge.evercrops.core.event;
 
 import mod.gottsch.forge.evercrops.core.EverCrops;
+import mod.gottsch.forge.evercrops.core.persistence.CropCatchUp;
 import mod.gottsch.forge.evercrops.core.persistence.CropRegistry;
-import mod.gottsch.forge.evercrops.core.persistence.CropState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.CocoaBlock;
 import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.block.NetherWartBlock;
 import net.minecraft.world.level.block.StemBlock;
+import net.minecraft.world.level.block.SweetBerryBushBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -38,7 +42,7 @@ import net.neoforged.neoforge.event.level.BlockEvent;
 public class ModEvents {
 
     /**
-     * Register a CropState entry whenever a crop or stem block is placed by an entity.
+     * Register a CropState entry whenever a tracked crop block is placed by an entity.
      */
     @SubscribeEvent
     public static void onBlockPlaced(BlockEvent.EntityPlaceEvent event) {
@@ -46,21 +50,16 @@ public class ModEvents {
             return;
         }
         BlockState state = event.getPlacedBlock();
-        if ((state.getBlock() instanceof CropBlock && state.hasProperty(CropBlock.AGE))
-                || (state.getBlock() instanceof StemBlock && state.hasProperty(StemBlock.AGE))) {
-            ServerLevel serverLevel = (ServerLevel) event.getLevel();
-            BlockPos pos = event.getPos();
-            CropState cropState = new CropState();
-            cropState.setLastCallGameTime(serverLevel.getGameTime())
-                    .setLastGrowthGameTime(serverLevel.getGameTime())
-                    .setLastCallLightLevel(serverLevel.getRawBrightness(pos, 0))
-                    .setLastGrowthLightLevel(serverLevel.getRawBrightness(pos, 0));
-            CropRegistry.put(serverLevel, pos, cropState);
+        if (!isTracked(state)) {
+            return;
         }
+        ServerLevel serverLevel = (ServerLevel) event.getLevel();
+        BlockPos pos = event.getPos();
+        CropRegistry.put(serverLevel, pos, CropCatchUp.createState(serverLevel, pos));
     }
 
     /**
-     * Remove the CropState entry when a player breaks a crop or stem block.
+     * Remove the CropState entry when a player breaks a tracked crop block.
      */
     @SubscribeEvent
     public static void onBlockBroken(BlockEvent.BreakEvent event) {
@@ -68,8 +67,22 @@ public class ModEvents {
             return;
         }
         BlockState state = event.getState();
-        if (state.getBlock() instanceof CropBlock || state.getBlock() instanceof StemBlock) {
+        if (isTracked(state)) {
             CropRegistry.remove((ServerLevel) event.getLevel(), event.getPos());
         }
+    }
+
+    /**
+     * Whether a placed/broken block should be tracked by EverCrops. Mirrors the
+     * set of block classes that have a randomTick mixin in this mod.
+     */
+    private static boolean isTracked(BlockState state) {
+        Block block = state.getBlock();
+        if (block instanceof CropBlock && state.hasProperty(CropBlock.AGE)) return true;
+        if (block instanceof StemBlock && state.hasProperty(StemBlock.AGE)) return true;
+        if (block instanceof SweetBerryBushBlock && state.hasProperty(SweetBerryBushBlock.AGE)) return true;
+        if (block instanceof NetherWartBlock && state.hasProperty(NetherWartBlock.AGE)) return true;
+        if (block instanceof CocoaBlock && state.hasProperty(CocoaBlock.AGE)) return true;
+        return false;
     }
 }
