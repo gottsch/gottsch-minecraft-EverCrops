@@ -4,11 +4,14 @@
   "compatibilityLevel": "JAVA_21",
   "refmap": "evercrops.refmap.json",
   "mixins": [
+    "CactusBlockMixin",
     "CocoaBlockMixin",
     "CropBlockMixin",
     "IStemBlockMixin",
+    "KelpBlockMixin",
     "NetherWartBlockMixin",
     "StemBlockMixin",
+    "SugarCaneBlockMixin",
     "SweetBerryBushBlockMixin"
   ],
   "injectors": {

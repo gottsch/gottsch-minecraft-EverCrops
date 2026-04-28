@@ -18,15 +18,20 @@
 package mod.gottsch.forge.evercrops.core.event;
 
 import mod.gottsch.forge.evercrops.core.EverCrops;
+import mod.gottsch.forge.evercrops.core.config.Config;
 import mod.gottsch.forge.evercrops.core.persistence.CropCatchUp;
 import mod.gottsch.forge.evercrops.core.persistence.CropRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.CactusBlock;
 import net.minecraft.world.level.block.CocoaBlock;
 import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.block.GrowingPlantHeadBlock;
+import net.minecraft.world.level.block.KelpBlock;
 import net.minecraft.world.level.block.NetherWartBlock;
 import net.minecraft.world.level.block.StemBlock;
+import net.minecraft.world.level.block.SugarCaneBlock;
 import net.minecraft.world.level.block.SweetBerryBushBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -78,11 +83,22 @@ public class ModEvents {
      */
     private static boolean isTracked(BlockState state) {
         Block block = state.getBlock();
-        if (block instanceof CropBlock && state.hasProperty(CropBlock.AGE)) return true;
-        if (block instanceof StemBlock && state.hasProperty(StemBlock.AGE)) return true;
-        if (block instanceof SweetBerryBushBlock && state.hasProperty(SweetBerryBushBlock.AGE)) return true;
-        if (block instanceof NetherWartBlock && state.hasProperty(NetherWartBlock.AGE)) return true;
-        if (block instanceof CocoaBlock && state.hasProperty(CocoaBlock.AGE)) return true;
+        if (Config.SERVER.cropsEnabled.get()) {
+            if (block instanceof CropBlock && state.hasProperty(CropBlock.AGE)) return true;
+        }
+        if (Config.SERVER.stemCropsEnabled.get()) {
+            if (block instanceof StemBlock && state.hasProperty(StemBlock.AGE)) return true;
+        }
+        if (Config.SERVER.bushCropsEnabled.get()) {
+            if (block instanceof SweetBerryBushBlock && state.hasProperty(SweetBerryBushBlock.AGE)) return true;
+            if (block instanceof NetherWartBlock && state.hasProperty(NetherWartBlock.AGE)) return true;
+            if (block instanceof CocoaBlock && state.hasProperty(CocoaBlock.AGE)) return true;
+        }
+        if (Config.SERVER.columnCropsEnabled.get()) {
+            if (block instanceof SugarCaneBlock && state.hasProperty(SugarCaneBlock.AGE)) return true;
+            if (block instanceof CactusBlock && state.hasProperty(CactusBlock.AGE)) return true;
+            if (block instanceof KelpBlock && state.hasProperty(GrowingPlantHeadBlock.AGE)) return true;
+        }
         return false;
     }
 }

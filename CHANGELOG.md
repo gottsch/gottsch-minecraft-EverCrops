@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] - 2026-4-27
+
+### Added
+
+- Catch-up growth for **sugar cane** — AGE 0–15, spawns new cane above when AGE wraps, max column height 3, no light requirement.
+- Catch-up growth for **cactus** — AGE 0–15, same wrapping pattern as sugar cane, max column height 3.
+- Catch-up growth for **kelp** — AGE 0–25, each growth step places a new kelp head above (converting the old head to a kelp plant body), stops at AGE 25. Growth gated at ~14% per tick (mirroring vanilla probability).
+- `ModEvents` placement/break tracking extended to cover sugar cane, cactus, and kelp.
+
+
 ## [3.1.0] - 2026-4-26
 
 ### Added
@@ -17,7 +27,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `ModEvents` placement/break tracking generalized via a single `isTracked(BlockState)` guard now covering crops, stems, sweet berry bushes, nether wart, and cocoa pods.
-- Modrinth and CurseForge descriptions updated to reflect the expanded supported-crop list.
 
 ## [3.0.0] - 2026-4-25
 

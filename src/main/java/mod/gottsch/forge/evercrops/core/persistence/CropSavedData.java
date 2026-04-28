@@ -118,16 +118,23 @@ public class CropSavedData extends SavedData {
 
     /**
      * Subtracts {@code ticks} from the lastCallGameTime and lastGrowthGameTime of
-     * every tracked entry, making them appear to have been last seen that many ticks
-     * ago. The next randomTick on each crop will then trigger the offline-growth path.
+     * every entry within {@code radius} blocks of {@code origin}.
+     * Returns the number of entries backdated.
      */
-    public int backdateAll(long ticks) {
-        for (CropState state : crops.values()) {
-            state.setLastCallGameTime(state.getLastCallGameTime() - ticks);
-            state.setLastGrowthGameTime(state.getLastGrowthGameTime() - ticks);
+    public int backdateInRadius(BlockPos origin, int radius, long ticks) {
+        long radiusSq = (long) radius * radius;
+        int count = 0;
+        for (Map.Entry<Long, CropState> entry : crops.entrySet()) {
+            BlockPos pos = BlockPos.of(entry.getKey());
+            if (pos.distSqr(origin) <= radiusSq) {
+                CropState state = entry.getValue();
+                state.setLastCallGameTime(state.getLastCallGameTime() - ticks);
+                state.setLastGrowthGameTime(state.getLastGrowthGameTime() - ticks);
+                count++;
+            }
         }
-        setDirty();
-        return crops.size();
+        if (count > 0) setDirty();
+        return count;
     }
 
     /** Returns all tracked positions as packed longs (see {@link BlockPos#asLong()}). */
