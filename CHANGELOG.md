@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.0] - 2026-5-2
+
+### Added
+
+- Catch-up growth for **saplings** — oak, birch, spruce, jungle, acacia, dark oak, cherry, mangrove, and any modded sapling that extends `SaplingBlock`. Uses the vanilla two-stage STAGE property (0 → 1 → tree). Light check uses sky+block light on the block above (matching vanilla). After a successful tree grow, the CropState entry is removed and vanilla's `randomTick` is cancelled to prevent overwriting the new tree structure.
+- `saplingCropsEnabled` server config flag (default `true`) — disable to opt out of sapling catch-up while keeping other categories active.
+- `ModEvents` placement/break tracking extended to cover saplings.
+
+### Fixed
+
+- Removed invalid INVOKE inject from `KelpBlockMixin` — `GrowingPlantHeadBlock.randomTick` does not directly call `setBlockAndUpdate` in its bytecode (1.21.1), causing a critical injection failure at startup. The HEAD inject alone is sufficient for kelp catch-up.
+
 ## [3.2.0] - 2026-4-27
 
 ### Added

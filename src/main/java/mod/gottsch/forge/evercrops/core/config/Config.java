@@ -67,6 +67,7 @@ public class Config extends AbstractConfig {
         public final ModConfigSpec.BooleanValue stemCropsEnabled;
         public final ModConfigSpec.BooleanValue bushCropsEnabled;
         public final ModConfigSpec.BooleanValue columnCropsEnabled;
+        public final ModConfigSpec.BooleanValue saplingCropsEnabled;
 
         public ServerConfig(ModConfigSpec.Builder builder) {
             builder.comment("Controls which crop categories receive catch-up growth.")
@@ -87,6 +88,11 @@ public class Config extends AbstractConfig {
             columnCropsEnabled = builder
                     .comment("Enable catch-up growth for column crops: sugar cane, cactus, kelp, and modded subclasses.")
                     .define("columnCropsEnabled", true);
+
+            saplingCropsEnabled = builder
+                    .comment("Enable catch-up growth for saplings (oak, birch, spruce, jungle, acacia, dark oak, cherry, mangrove) " +
+                             "and modded subclasses. When enabled, saplings will advance their STAGE and attempt to grow a tree based on elapsed time.")
+                    .define("saplingCropsEnabled", true);
 
             builder.pop();
         }

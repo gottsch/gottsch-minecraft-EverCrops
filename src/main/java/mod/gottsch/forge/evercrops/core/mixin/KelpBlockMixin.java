@@ -103,20 +103,4 @@ public abstract class KelpBlockMixin extends Block {
         }
     }
 
-    // Sync lastGrowthGameTime when vanilla kelp grows normally.
-    @Inject(method = "randomTick", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/server/level/ServerLevel;setBlockAndUpdate(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)Z"))
-    public void everCrops_randomTick_setBlockAndUpdate(BlockState state, ServerLevel level, BlockPos pos, RandomSource random, CallbackInfo ci) {
-        if (!(((Object)this) instanceof KelpBlock)) return;
-        if (!Config.SERVER.columnCropsEnabled.get()) return;
-        if (!state.hasProperty(GrowingPlantHeadBlock.AGE)) return;
-        Optional<CropState> cropState = CropRegistry.get(level, pos);
-        if (cropState.isPresent()) {
-            cropState.get().setLastGrowthGameTime(level.getGameTime())
-                    .setLastGrowthLightLevel(level.getRawBrightness(pos, 0));
-            CropRegistry.put(level, pos, cropState.get());
-        } else {
-            CropRegistry.put(level, pos, CropCatchUp.createState(level, pos));
-        }
-    }
 }

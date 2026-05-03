@@ -10,6 +10,7 @@
     "IStemBlockMixin",
     "KelpBlockMixin",
     "NetherWartBlockMixin",
+    "SaplingBlockMixin",
     "StemBlockMixin",
     "SugarCaneBlockMixin",
     "SweetBerryBushBlockMixin"

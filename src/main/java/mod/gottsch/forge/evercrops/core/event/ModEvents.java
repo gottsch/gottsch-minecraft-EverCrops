@@ -30,6 +30,7 @@ import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.GrowingPlantHeadBlock;
 import net.minecraft.world.level.block.KelpBlock;
 import net.minecraft.world.level.block.NetherWartBlock;
+import net.minecraft.world.level.block.SaplingBlock;
 import net.minecraft.world.level.block.StemBlock;
 import net.minecraft.world.level.block.SugarCaneBlock;
 import net.minecraft.world.level.block.SweetBerryBushBlock;
@@ -98,6 +99,9 @@ public class ModEvents {
             if (block instanceof SugarCaneBlock && state.hasProperty(SugarCaneBlock.AGE)) return true;
             if (block instanceof CactusBlock && state.hasProperty(CactusBlock.AGE)) return true;
             if (block instanceof KelpBlock && state.hasProperty(GrowingPlantHeadBlock.AGE)) return true;
+        }
+        if (Config.SERVER.saplingCropsEnabled.get()) {
+            if (block instanceof SaplingBlock && state.hasProperty(SaplingBlock.STAGE)) return true;
         }
         return false;
     }
