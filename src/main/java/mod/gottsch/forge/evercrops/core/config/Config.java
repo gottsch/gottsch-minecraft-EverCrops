@@ -31,6 +31,9 @@ public class Config extends AbstractConfig {
     public static final ModConfigSpec COMMON_SPEC;
     public static final CommonConfig COMMON;
 
+    public static final ModConfigSpec SERVER_SPEC;
+    public static final ServerConfig SERVER;
+
     public static Config instance = new Config();
 
     static {
@@ -38,18 +41,60 @@ public class Config extends AbstractConfig {
                 .configure(CommonConfig::new);
         COMMON_SPEC = commonSpecPair.getRight();
         COMMON = commonSpecPair.getLeft();
+
+        final Pair<ServerConfig, ModConfigSpec> serverSpecPair = new ModConfigSpec.Builder()
+                .configure(ServerConfig::new);
+        SERVER_SPEC = serverSpecPair.getRight();
+        SERVER = serverSpecPair.getLeft();
     }
 
     private Config() {}
 
     public static void register(ModContainer modContainer) {
         modContainer.registerConfig(ModConfig.Type.COMMON, COMMON_SPEC);
+        modContainer.registerConfig(ModConfig.Type.SERVER, SERVER_SPEC);
     }
 
     public static class CommonConfig {
         public static Logging logging;
         public CommonConfig(ModConfigSpec.Builder builder) {
             logging = new Logging(builder);
+        }
+    }
+
+    public static class ServerConfig {
+        public final ModConfigSpec.BooleanValue cropsEnabled;
+        public final ModConfigSpec.BooleanValue stemCropsEnabled;
+        public final ModConfigSpec.BooleanValue bushCropsEnabled;
+        public final ModConfigSpec.BooleanValue columnCropsEnabled;
+        public final ModConfigSpec.BooleanValue saplingCropsEnabled;
+
+        public ServerConfig(ModConfigSpec.Builder builder) {
+            builder.comment("Controls which crop categories receive catch-up growth.")
+                   .push("crops");
+
+            cropsEnabled = builder
+                    .comment("Enable catch-up growth for standard crops: wheat, carrots, potatoes, beetroot, pitcher plant, torchflower, and modded subclasses.")
+                    .define("cropsEnabled", true);
+
+            stemCropsEnabled = builder
+                    .comment("Enable catch-up growth for stem crops: melon and pumpkin stems (including fruit spread), and modded subclasses.")
+                    .define("stemCropsEnabled", true);
+
+            bushCropsEnabled = builder
+                    .comment("Enable catch-up growth for bush/special crops: sweet berry bushes, nether wart, cocoa pods, and modded subclasses.")
+                    .define("bushCropsEnabled", true);
+
+            columnCropsEnabled = builder
+                    .comment("Enable catch-up growth for column crops: sugar cane, cactus, kelp, and modded subclasses.")
+                    .define("columnCropsEnabled", true);
+
+            saplingCropsEnabled = builder
+                    .comment("Enable catch-up growth for saplings (oak, birch, spruce, jungle, acacia, dark oak, cherry, mangrove) " +
+                             "and modded subclasses. When enabled, saplings will advance their STAGE and attempt to grow a tree based on elapsed time.")
+                    .define("saplingCropsEnabled", true);
+
+            builder.pop();
         }
     }
 

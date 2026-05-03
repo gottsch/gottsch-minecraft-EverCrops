@@ -18,6 +18,7 @@
 package mod.gottsch.forge.evercrops.core.mixin;
 
 import mod.gottsch.forge.evercrops.core.EverCrops;
+import mod.gottsch.forge.evercrops.core.config.Config;
 import mod.gottsch.forge.evercrops.core.persistence.CropRegistry;
 import mod.gottsch.forge.evercrops.core.persistence.CropState;
 import net.minecraft.core.BlockPos;
@@ -53,6 +54,7 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
 
     @Inject(method = "randomTick", at = @At(value = "HEAD"))
     public void everCrops_randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource randomSource, CallbackInfo ci) {
+        if (!Config.SERVER.cropsEnabled.get()) return;
         if (!state.hasProperty(CropBlock.AGE)) {
             return;
         }
@@ -120,6 +122,7 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
 
     @Inject(method = "randomTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
     public void everCrops_randomTick_setBlock(BlockState state, ServerLevel level, BlockPos pos, RandomSource randomSource, CallbackInfo ci) {
+        if (!Config.SERVER.cropsEnabled.get()) return;
         if (!state.hasProperty(CropBlock.AGE)) {
             return;
         }
