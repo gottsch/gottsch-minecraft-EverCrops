@@ -85,7 +85,7 @@ public class ModEvents {
     private static boolean isTracked(BlockState state) {
         Block block = state.getBlock();
         if (Config.SERVER.cropsEnabled.get()) {
-            if (block instanceof CropBlock && state.hasProperty(CropBlock.AGE)) return true;
+            if (block instanceof CropBlock cropBlock && state.hasProperty(cropBlock.getAgeProperty())) return true;
         }
         if (Config.SERVER.stemCropsEnabled.get()) {
             if (block instanceof StemBlock && state.hasProperty(StemBlock.AGE)) return true;

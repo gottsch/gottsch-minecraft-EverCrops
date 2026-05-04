@@ -55,7 +55,7 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
     @Inject(method = "randomTick", at = @At(value = "HEAD"))
     public void everCrops_randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource randomSource, CallbackInfo ci) {
         if (!Config.SERVER.cropsEnabled.get()) return;
-        if (!state.hasProperty(CropBlock.AGE)) {
+        if (!state.hasProperty(((CropBlock)(Object)this).getAgeProperty())) {
             return;
         }
 
@@ -94,7 +94,7 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
                                     EverCrops.LOGGER.debug("growing at -> {}", pos);
                                     currentState = ((CropBlock) (Object) this).getStateForAge(age + 1);
                                     if (EverCrops.LOGGER.isDebugEnabled()) {
-                                        EverCrops.LOGGER.debug("current state.age -> {}", currentState.getValue(CropBlock.AGE));
+                                        EverCrops.LOGGER.debug("current state.age -> {}", ((CropBlock)(Object)this).getAge(currentState));
                                     }
                                     level.setBlock(pos, currentState, 3);
                                     CommonHooks.fireCropGrowPost(level, pos, currentState);
@@ -123,7 +123,7 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
     @Inject(method = "randomTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
     public void everCrops_randomTick_setBlock(BlockState state, ServerLevel level, BlockPos pos, RandomSource randomSource, CallbackInfo ci) {
         if (!Config.SERVER.cropsEnabled.get()) return;
-        if (!state.hasProperty(CropBlock.AGE)) {
+        if (!state.hasProperty(((CropBlock)(Object)this).getAgeProperty())) {
             return;
         }
         Optional<CropState> cropState = CropRegistry.get(level, pos);
