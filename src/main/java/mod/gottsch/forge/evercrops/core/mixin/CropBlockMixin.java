@@ -29,7 +29,9 @@ import net.minecraft.world.level.block.BushBlock;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.common.CommonHooks;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -48,6 +50,9 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
     @Unique
     private static final int AVG_GROWTH_TICK_INTERVAL = 7000;
 
+    @Shadow
+    protected abstract IntegerProperty getAgeProperty();
+
     public CropBlockMixin(Properties properties) {
         super(properties);
     }
@@ -55,7 +60,7 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
     @Inject(method = "randomTick", at = @At(value = "HEAD"))
     public void everCrops_randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource randomSource, CallbackInfo ci) {
         if (!Config.SERVER.cropsEnabled.get()) return;
-        if (!state.hasProperty(((CropBlock)(Object)this).getAgeProperty())) {
+        if (!state.hasProperty(this.getAgeProperty())) {
             return;
         }
 
@@ -123,7 +128,7 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
     @Inject(method = "randomTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
     public void everCrops_randomTick_setBlock(BlockState state, ServerLevel level, BlockPos pos, RandomSource randomSource, CallbackInfo ci) {
         if (!Config.SERVER.cropsEnabled.get()) return;
-        if (!state.hasProperty(((CropBlock)(Object)this).getAgeProperty())) {
+        if (!state.hasProperty(this.getAgeProperty())) {
             return;
         }
         Optional<CropState> cropState = CropRegistry.get(level, pos);
