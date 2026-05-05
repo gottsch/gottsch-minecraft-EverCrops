@@ -1,11 +1,77 @@
 # EverCrops
 
-EverCrops utilizes mixins to update the vanilla crop blocks (any block that extends CropBlock or StemBlock - wheat, carrots, potatoes, watermelon, pumpkins) enabling them to grow even when they are not currently loaded. 
+**Crops keep growing while you're away from your farm.**
 
-So, it doesn't actually grow when the crop blocks are not loaded, instead it calculates the elapsed time since the block last randomly ticked and "catches-up" with the growth when the chunk is reloaded and the block randomly ticks again. If you went off adventuring for a while in a far off place, when you came back and close enough that the chunk the crops are in loads, the amount of time elapsed will be applied to the growth process, updating the block state. (Note - for single player games, there isn't any grow when you aren't playing).
+EverCrops uses Mixin hooks to track when each crop block last grew. When you return to a loaded chunk, any elapsed offline time is applied as catch-up growth on the next random tick — no block entities, no extra world gen, no new blocks.
 
-EverCrops only uses **@Inject**, **@Accessor** and **@Invoker** mixins, and thus it should be compatible with any mod that also uses mixins. No new custom blocks nor block entities are introduced.
+---
 
-## Technicals
+## How it works
 
-EverCrops was harder to implement than EverFurnace because the crop blocks don't use BlockEntities, and thus have limited BlockState properties. As well, since they are only Blocks, they only use a randomTick() call, which as the name suggests, ticks randomly. Because of this you may not see immediate growth results when you return, but when the specific crop randomly ticks again, it will be like Bonemeal(s) was applied (depending how long the blocks were unloaded).
+EverCrops does **not** grow crops while chunks are unloaded. Instead, it records the last time each crop block was seen and, when the chunk loads again and the block receives a random tick, calculates how many growth steps should have occurred during the gap. Those steps are applied immediately (up to a cap). The result looks like multiple bonemeal applications.
+
+Note: in single-player worlds, time does not pass while you are not playing, so no catch-up accumulates.
+
+---
+
+## Supported crops
+
+| Category | Crops |
+|---|---|
+| **Standard crops** | Wheat, carrots, potatoes, beetroot, pitcher plant, torchflower |
+| **Stem crops** | Melon stems, pumpkin stems (including fruit spread) |
+| **Bush / special crops** | Sweet berry bushes, nether wart, cocoa pods |
+| **Column crops** | Sugar cane, cactus, kelp |
+| **Bamboo** | Bamboo (sky-light required, max height 16) |
+| **Nether vines** | Twisting vines (grows up), weeping vines (grows down) |
+| **Saplings** | Oak, birch, spruce, jungle, acacia, dark oak, cherry, mangrove |
+
+Most modded crops that subclass any of the above vanilla classes are also supported automatically.
+
+---
+
+## Server config
+
+EverCrops adds a per-world server config (`serverconfig/evercrops-server.toml`) with toggle flags for each crop category:
+
+```toml
+[crops]
+    # Enable catch-up growth for standard crops
+    cropsEnabled = true
+    # Enable catch-up growth for stem crops (melon/pumpkin)
+    stemCropsEnabled = true
+    # Enable catch-up growth for bush/special crops
+    bushCropsEnabled = true
+    # Enable catch-up growth for column crops (cane/cactus/kelp)
+    columnCropsEnabled = true
+    # Enable catch-up growth for saplings
+    saplingCropsEnabled = true
+    # Enable catch-up growth for bamboo
+    bambooEnabled = true
+    # Enable catch-up growth for twisting vines
+    twistingVinesEnabled = true
+    # Enable catch-up growth for weeping vines
+    weepingVinesEnabled = true
+```
+
+---
+
+## Commands
+
+| Command                                | Description |
+|----------------------------------------|---|
+| `/evercrops simulate [ticks] [radius]` | Backdates all tracked crops within `radius` blocks of the player by `ticks`, triggering catch-up on the next random tick. Useful for testing. |
+| `/evercrops tick [radius]`             | Forces a `randomTick` on every tracked crop within `radius` blocks of the player right now. |
+| `/evercrops inspect [x y z]`           | Shows the stored `CropState` for a position (defaults to the player's feet). |
+
+---
+
+## Compatibility
+
+EverCrops only uses `@Inject`, `@Accessor`, and `@Invoker` Mixin annotations. No new blocks, items, or block entities are introduced. It should be compatible with any mod that also uses Mixins.
+
+---
+
+## Technical notes
+
+Crop state is stored as NBT in `<world>/data/evercrops.dat` per dimension using Minecraft's built-in `SavedData` system. No native libraries or manual lifecycle management required.

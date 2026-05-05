@@ -9,67 +9,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Catch-up growth for **bamboo** (`BambooStalkBlock`) — places new bamboo blocks above the current top based on elapsed time. Only grows when `STAGE == 0` (matching vanilla gate). Requires sky-only light at the block above (`getRawBrightness >= 9`; torch light does not count). Respects the 16-block column cap.
-- `bambooEnabled` server config flag (default `true`) — kept separate from `columnCropsEnabled` because bamboo uses `STAGE` gating and a higher max-height cap than sugar cane/cactus.
-- `ModEvents` placement/break tracking extended to cover bamboo.
-- Catch-up growth for **twisting vines** (`TwistingVinesBlock`) — grows upward, AGE 0–25, no light requirement. Nether Crimson Forest plant.
-- Catch-up growth for **weeping vines** (`WeepingVinesBlock`) — grows downward, AGE 0–25, no light requirement. Nether plant.
-- `twistingVinesEnabled` and `weepingVinesEnabled` server config flags (both default `true`).
-- `ModEvents` placement/break tracking extended to cover twisting and weeping vines.
+- **Bamboo** now catches up on growth when you've been away. It needs skylight above it (torches don't count) and won't grow past 16 blocks tall — same rules as vanilla.
+- **Twisting vines** (the tall green ones in crimson forests) now catch up while you're gone. They grow upward and don't need any light.
+- **Weeping vines** (the red hanging ones in the Nether) now catch up while you're gone. They grow downward and don't need any light.
+- Added on/off settings for bamboo, twisting vines, and weeping vines in the server config. All three are on by default.
 
 ## [3.3.1] - 2026-5-3
 
 ### Fixed
 
-- Beetroot (and any `CropBlock` subclass that overrides `getAgeProperty()` to return a property other than `CropBlock.AGE`) was silently excluded from catch-up tracking. The `CropBlockMixin` guard and `ModEvents.isTracked()` now use virtual dispatch via `getAgeProperty()` so all crop subclasses are handled correctly regardless of which age property they declare.
+- **Beetroot** (and some modded crops) was being silently skipped and never catching up on growth while you were away. Fixed.
 
 ## [3.3.0] - 2026-5-2
 
 ### Added
 
-- Catch-up growth for **saplings** — oak, birch, spruce, jungle, acacia, dark oak, cherry, mangrove, and any modded sapling that extends `SaplingBlock`. Uses the vanilla two-stage STAGE property (0 → 1 → tree). Light check uses sky+block light on the block above (matching vanilla). After a successful tree grow, the CropState entry is removed and vanilla's `randomTick` is cancelled to prevent overwriting the new tree structure.
-- `saplingCropsEnabled` server config flag (default `true`) — disable to opt out of sapling catch-up while keeping other categories active.
-- `ModEvents` placement/break tracking extended to cover saplings.
+- **Saplings** now catch up while you're gone — oak, birch, spruce, jungle, acacia, dark oak, cherry, and mangrove. They need enough light above them, same as in vanilla. Once the tree finishes growing, it stops being tracked.
+- Added an on/off setting for saplings in the server config (on by default).
 
 ### Fixed
 
-- Removed invalid INVOKE inject from `KelpBlockMixin` — `GrowingPlantHeadBlock.randomTick` does not directly call `setBlockAndUpdate` in its bytecode (1.21.1), causing a critical injection failure at startup. The HEAD inject alone is sufficient for kelp catch-up.
+- Fixed a crash that could happen when kelp was growing in certain situations.
 
 ## [3.2.0] - 2026-4-27
 
 ### Added
 
-- Catch-up growth for **sugar cane** — AGE 0–15, spawns new cane above when AGE wraps, max column height 3, no light requirement.
-- Catch-up growth for **cactus** — AGE 0–15, same wrapping pattern as sugar cane, max column height 3.
-- Catch-up growth for **kelp** — AGE 0–25, each growth step places a new kelp head above (converting the old head to a kelp plant body), stops at AGE 25. Growth gated at ~14% per tick (mirroring vanilla probability).
-- `ModEvents` placement/break tracking extended to cover sugar cane, cactus, and kelp.
-
+- **Sugar cane**, **cactus**, and **kelp** now catch up on growth while you're away.
+- Added on/off settings for each of these in the server config (all on by default).
 
 ## [3.1.0] - 2026-4-26
 
 ### Added
 
-- Catch-up growth for **sweet berry bushes** — ages 0–3, requires light level ≥ 9 (matches vanilla).
-- Catch-up growth for **nether wart** — ages 0–3, no light requirement.
-- Catch-up growth for **cocoa pods** — ages 0–2, no light requirement.
-- New `CropCatchUp` helper class consolidating the timing/threshold/light-gating logic shared by the new mixins.
-
-### Changed
-
-- `ModEvents` placement/break tracking generalized via a single `isTracked(BlockState)` guard now covering crops, stems, sweet berry bushes, nether wart, and cocoa pods.
+- **Sweet berry bushes**, **nether wart**, and **cocoa pods** now catch up on growth while you're away. Sweet berry bushes need enough light (same as vanilla). Nether wart and cocoa pods don't care about light at all.
+- Added on/off settings for each of these in the server config (all on by default).
 
 ## [3.0.0] - 2026-4-25
 
 ### Added
 
-- `/evercrops simulate <ticks>` command — backdates all tracked crop entries in the current dimension by the given number of ticks, allowing offline-growth logic to be triggered immediately on the next random tick. Useful for testing.
-- `/evercrops tick <radius>` command — forces a `randomTick` on every tracked crop block within the given radius of the player, applying growth instantly without waiting for random tick scheduling.
-- `/evercrops inspect [x y z]` command — displays the stored `CropState` for a block position (defaults to the player's feet), including call/growth deltas and whether offline growth would trigger on the next tick.
+- `/evercrops simulate <ticks> <radius>` — pretends a chunk has been unloaded for a given number of ticks, so nearby tracked crops will catch up on the next tick. Great for testing.
+- `/evercrops tick <radius>` — forces every tracked crop nearby to try to grow right now, without waiting for the game to randomly pick it.
+- `/evercrops inspect [x y z]` — shows catch-up info for a crop at a given position (defaults to the block at your feet).
 
 ### Changed
 
-- Replaced RocksDB persistence with Minecraft's built-in `SavedData` system. Crop state is now stored as NBT in `<world>/data/evercrops.dat` per dimension — no native libraries, no manual lifecycle management, and no platform-specific binaries required.
+- Crop data is now saved directly inside your world folder instead of a separate database. Simpler, more reliable, and no extra files to worry about.
 
 ### Fixed
 
-- Fixed crash (`IllegalArgumentException: Cannot get property age`) caused by mods that extend `CropBlock` or `StemBlock` but register blocks (e.g. `minecraft:oxeye_daisy`) whose `StateDefinition` does not include the standard age property. The mixin now guards all age-property access and skips incompatible blocks silently.
+- Fixed a crash that happened when certain mods added plants that EverCrops didn't know how to handle. Those plants are now safely ignored.
