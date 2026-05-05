@@ -68,6 +68,9 @@ public class Config extends AbstractConfig {
         public final ModConfigSpec.BooleanValue bushCropsEnabled;
         public final ModConfigSpec.BooleanValue columnCropsEnabled;
         public final ModConfigSpec.BooleanValue saplingCropsEnabled;
+        public final ModConfigSpec.BooleanValue bambooEnabled;
+        public final ModConfigSpec.BooleanValue twistingVinesEnabled;
+        public final ModConfigSpec.BooleanValue weepingVinesEnabled;
 
         public ServerConfig(ModConfigSpec.Builder builder) {
             builder.comment("Controls which crop categories receive catch-up growth.")
@@ -93,6 +96,22 @@ public class Config extends AbstractConfig {
                     .comment("Enable catch-up growth for saplings (oak, birch, spruce, jungle, acacia, dark oak, cherry, mangrove) " +
                              "and modded subclasses. When enabled, saplings will advance their STAGE and attempt to grow a tree based on elapsed time.")
                     .define("saplingCropsEnabled", true);
+
+            bambooEnabled = builder
+                    .comment("Enable catch-up growth for bamboo. When enabled, bamboo stalks will grow additional blocks " +
+                             "above based on elapsed time. Requires sky light (not torch light) at the block above. " +
+                             "Separate from columnCropsEnabled because bamboo uses STAGE gating and has a max height of 16.")
+                    .define("bambooEnabled", true);
+
+            twistingVinesEnabled = builder
+                    .comment("Enable catch-up growth for twisting vines (Crimson Forest, Nether). " +
+                             "Grows upward, no light requirement. Modded subclasses of TwistingVinesBlock are also covered.")
+                    .define("twistingVinesEnabled", true);
+
+            weepingVinesEnabled = builder
+                    .comment("Enable catch-up growth for weeping vines (Nether). " +
+                             "Grows downward, no light requirement. Modded subclasses of WeepingVinesBlock are also covered.")
+                    .define("weepingVinesEnabled", true);
 
             builder.pop();
         }
