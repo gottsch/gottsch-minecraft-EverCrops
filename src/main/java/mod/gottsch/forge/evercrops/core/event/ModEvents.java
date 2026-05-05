@@ -23,7 +23,11 @@ import mod.gottsch.forge.evercrops.core.persistence.CropCatchUp;
 import mod.gottsch.forge.evercrops.core.persistence.CropRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.BambooSaplingBlock;
+import net.minecraft.world.level.block.BambooStalkBlock;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.TwistingVinesBlock;
+import net.minecraft.world.level.block.WeepingVinesBlock;
 import net.minecraft.world.level.block.CactusBlock;
 import net.minecraft.world.level.block.CocoaBlock;
 import net.minecraft.world.level.block.CropBlock;
@@ -102,6 +106,16 @@ public class ModEvents {
         }
         if (Config.SERVER.saplingCropsEnabled.get()) {
             if (block instanceof SaplingBlock && state.hasProperty(SaplingBlock.STAGE)) return true;
+        }
+        if (Config.SERVER.bambooEnabled.get()) {
+            if (block instanceof BambooSaplingBlock) return true;
+            if (block instanceof BambooStalkBlock && state.hasProperty(BambooStalkBlock.STAGE)) return true;
+        }
+        if (Config.SERVER.twistingVinesEnabled.get()) {
+            if (block instanceof TwistingVinesBlock && state.hasProperty(GrowingPlantHeadBlock.AGE)) return true;
+        }
+        if (Config.SERVER.weepingVinesEnabled.get()) {
+            if (block instanceof WeepingVinesBlock && state.hasProperty(GrowingPlantHeadBlock.AGE)) return true;
         }
         return false;
     }

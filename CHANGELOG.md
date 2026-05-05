@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.0] - 2026-5-5
+
+### Added
+
+- Catch-up growth for **bamboo** (`BambooStalkBlock`) — places new bamboo blocks above the current top based on elapsed time. Only grows when `STAGE == 0` (matching vanilla gate). Requires sky-only light at the block above (`getRawBrightness >= 9`; torch light does not count). Respects the 16-block column cap.
+- `bambooEnabled` server config flag (default `true`) — kept separate from `columnCropsEnabled` because bamboo uses `STAGE` gating and a higher max-height cap than sugar cane/cactus.
+- `ModEvents` placement/break tracking extended to cover bamboo.
+- Catch-up growth for **twisting vines** (`TwistingVinesBlock`) — grows upward, AGE 0–25, no light requirement. Nether Crimson Forest plant.
+- Catch-up growth for **weeping vines** (`WeepingVinesBlock`) — grows downward, AGE 0–25, no light requirement. Nether plant.
+- `twistingVinesEnabled` and `weepingVinesEnabled` server config flags (both default `true`).
+- `ModEvents` placement/break tracking extended to cover twisting and weeping vines.
+
 ## [3.3.1] - 2026-5-3
 
 ### Fixed
