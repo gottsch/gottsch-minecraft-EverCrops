@@ -71,6 +71,8 @@ public class Config extends AbstractConfig {
         public final ModConfigSpec.BooleanValue bambooEnabled;
         public final ModConfigSpec.BooleanValue twistingVinesEnabled;
         public final ModConfigSpec.BooleanValue weepingVinesEnabled;
+        public final ModConfigSpec.BooleanValue caveVinesEnabled;
+        public final ModConfigSpec.BooleanValue chorusFlowerEnabled;
 
         public ServerConfig(ModConfigSpec.Builder builder) {
             builder.comment("Controls which crop categories receive catch-up growth.")
@@ -112,6 +114,17 @@ public class Config extends AbstractConfig {
                     .comment("Enable catch-up growth for weeping vines (Nether). " +
                              "Grows downward, no light requirement. Modded subclasses of WeepingVinesBlock are also covered.")
                     .define("weepingVinesEnabled", true);
+
+            caveVinesEnabled = builder
+                    .comment("Enable catch-up growth for cave vines (glow berry vines). " +
+                             "Grows downward, no light requirement. Modded subclasses of CaveVinesBlock are also covered.")
+                    .define("caveVinesEnabled", true);
+
+            chorusFlowerEnabled = builder
+                    .comment("Enable catch-up growth for chorus flowers (End dimension). " +
+                             "Due to branching growth mechanics, at most one growth step is applied per catch-up event " +
+                             "to prevent excessive structure expansion.")
+                    .define("chorusFlowerEnabled", true);
 
             builder.pop();
         }
