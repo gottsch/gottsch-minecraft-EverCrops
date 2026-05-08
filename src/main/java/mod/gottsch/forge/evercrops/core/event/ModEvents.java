@@ -26,6 +26,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.BambooSaplingBlock;
 import net.minecraft.world.level.block.BambooStalkBlock;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.CaveVinesBlock;
+import net.minecraft.world.level.block.ChorusFlowerBlock;
 import net.minecraft.world.level.block.TwistingVinesBlock;
 import net.minecraft.world.level.block.WeepingVinesBlock;
 import net.minecraft.world.level.block.CactusBlock;
@@ -116,6 +118,12 @@ public class ModEvents {
         }
         if (Config.SERVER.weepingVinesEnabled.get()) {
             if (block instanceof WeepingVinesBlock && state.hasProperty(GrowingPlantHeadBlock.AGE)) return true;
+        }
+        if (Config.SERVER.caveVinesEnabled.get()) {
+            if (block instanceof CaveVinesBlock && state.hasProperty(GrowingPlantHeadBlock.AGE)) return true;
+        }
+        if (Config.SERVER.chorusFlowerEnabled.get()) {
+            if (block instanceof ChorusFlowerBlock && state.hasProperty(ChorusFlowerBlock.AGE)) return true;
         }
         return false;
     }

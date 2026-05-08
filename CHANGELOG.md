@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.0] - 2026-5-6
+
+### Added
+
+- **Cave vines** (the glow berry vines hanging from cave ceilings) now catch up on growth while you're away. They grow downward and don't need any light. Glow berry state is preserved as normal.
+- **Chorus flowers** (End dimension) now catch up while you're away. Because chorus flowers can branch in unpredictable directions, only one growth step is applied per catch-up event to keep things from getting out of hand.
+- Added on/off settings for cave vines and chorus flowers in the server config. Both are on by default.
+
+---
+
 ## [3.4.0] - 2026-5-5
 
 ### Added
