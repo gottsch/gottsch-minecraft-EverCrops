@@ -31,6 +31,9 @@ public class Config extends AbstractConfig {
     public static final ForgeConfigSpec COMMON_SPEC;
     public static final CommonConfig COMMON;
 
+    public static final ForgeConfigSpec SERVER_SPEC;
+    public static final ServerConfig SERVER;
+
     // setup as a singleton
     public static Config instance = new Config();
 
@@ -39,22 +42,70 @@ public class Config extends AbstractConfig {
                 .configure(CommonConfig::new);
         COMMON_SPEC = commonSpecPair.getRight();
         COMMON = commonSpecPair.getLeft();
+
+        final Pair<ServerConfig, ForgeConfigSpec> serverSpecPair = new ForgeConfigSpec.Builder()
+                .configure(ServerConfig::new);
+        SERVER_SPEC = serverSpecPair.getRight();
+        SERVER = serverSpecPair.getLeft();
     }
 
     private Config() {}
 
     public static void register() {
         registerCommonConfig();
+        registerServerConfig();
     }
 
     private static void registerCommonConfig() {
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, COMMON_SPEC);
     }
 
+    private static void registerServerConfig() {
+        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, SERVER_SPEC);
+    }
+
     public static class CommonConfig {
         public static Logging logging;
         public CommonConfig(ForgeConfigSpec.Builder builder) {
             logging = new Logging(builder);
+        }
+    }
+
+    public static class ServerConfig {
+        public final ForgeConfigSpec.BooleanValue cropsEnabled;
+        public final ForgeConfigSpec.BooleanValue stemCropsEnabled;
+        public final ForgeConfigSpec.BooleanValue bushCropsEnabled;
+        public final ForgeConfigSpec.BooleanValue columnCropsEnabled;
+        public final ForgeConfigSpec.BooleanValue saplingCropsEnabled;
+        public final ForgeConfigSpec.BooleanValue bambooEnabled;
+        public final ForgeConfigSpec.BooleanValue twistingVinesEnabled;
+        public final ForgeConfigSpec.BooleanValue weepingVinesEnabled;
+        public final ForgeConfigSpec.BooleanValue caveVinesEnabled;
+        public final ForgeConfigSpec.BooleanValue chorusFlowerEnabled;
+
+        public ServerConfig(ForgeConfigSpec.Builder builder) {
+            builder.push("crops");
+            cropsEnabled = builder.comment("Enable catch-up growth for standard crops (wheat, carrots, potatoes, beetroot, etc.)")
+                    .define("cropsEnabled", true);
+            stemCropsEnabled = builder.comment("Enable catch-up growth for stem crops (melon, pumpkin)")
+                    .define("stemCropsEnabled", true);
+            bushCropsEnabled = builder.comment("Enable catch-up growth for sweet berry bushes, nether wart, and cocoa pods")
+                    .define("bushCropsEnabled", true);
+            columnCropsEnabled = builder.comment("Enable catch-up growth for column crops (sugar cane, cactus, kelp)")
+                    .define("columnCropsEnabled", true);
+            saplingCropsEnabled = builder.comment("Enable catch-up growth for saplings")
+                    .define("saplingCropsEnabled", true);
+            bambooEnabled = builder.comment("Enable catch-up growth for bamboo")
+                    .define("bambooEnabled", true);
+            twistingVinesEnabled = builder.comment("Enable catch-up growth for twisting vines")
+                    .define("twistingVinesEnabled", true);
+            weepingVinesEnabled = builder.comment("Enable catch-up growth for weeping vines")
+                    .define("weepingVinesEnabled", true);
+            caveVinesEnabled = builder.comment("Enable catch-up growth for cave vines")
+                    .define("caveVinesEnabled", true);
+            chorusFlowerEnabled = builder.comment("Enable catch-up growth for chorus flowers")
+                    .define("chorusFlowerEnabled", true);
+            builder.pop();
         }
     }
 

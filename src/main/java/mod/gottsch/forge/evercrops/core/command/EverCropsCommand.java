@@ -32,6 +32,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.state.BlockState;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -60,12 +62,14 @@ public class EverCropsCommand {
             Commands.literal("evercrops")
                 .requires(source -> source.hasPermission(2))
 
-                // /evercrops simulate <ticks>
+                // /evercrops simulate <ticks> <radius>
                 .then(Commands.literal("simulate")
                     .then(Commands.argument("ticks", LongArgumentType.longArg(1))
-                        .executes(ctx -> simulate(
-                                ctx.getSource(),
-                                LongArgumentType.getLong(ctx, "ticks")))))
+                        .then(Commands.argument("radius", IntegerArgumentType.integer(1, 128))
+                            .executes(ctx -> simulate(
+                                    ctx.getSource(),
+                                    LongArgumentType.getLong(ctx, "ticks"),
+                                    IntegerArgumentType.getInteger(ctx, "radius"))))))
 
                 // /evercrops tick <radius>
                 .then(Commands.literal("tick")
@@ -88,17 +92,20 @@ public class EverCropsCommand {
     // /evercrops simulate <ticks>
     // ------------------------------------------------------------------
 
-    private static int simulate(CommandSourceStack source, long ticks) {
+    private static int simulate(CommandSourceStack source, long ticks, int radius)
+            throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         ServerLevel level = source.getLevel();
+        ServerPlayer player = source.getPlayerOrException();
+        BlockPos origin = player.blockPosition();
+
         CropSavedData data = CropSavedData.getOrCreate(level);
-        int count = data.backdateAll(ticks);
+        int count = data.backdateInRadius(origin, radius, ticks);
 
         double minutes = ticks / 1200.0;
         source.sendSuccess(() -> Component.literal(
-                String.format("Backdated %d crop entries by %d ticks (%.1f min) in %s. " +
+                String.format("Backdated %d crop entries by %d ticks (%.1f min) within %d blocks. " +
                               "Use '/evercrops tick <radius>' to apply growth immediately.",
-                        count, ticks, minutes,
-                        level.dimension().location()))
+                        count, ticks, minutes, radius))
                 .withStyle(ChatFormatting.GREEN), false);
         return count;
     }
@@ -116,7 +123,8 @@ public class EverCropsCommand {
         long radiusSq = (long) radius * radius;
         int triggered = 0;
 
-        for (long packedPos : data.getKeys()) {
+        List<Long> keySnapshot = new ArrayList<>(data.getKeys());
+        for (long packedPos : keySnapshot) {
             BlockPos pos = BlockPos.of(packedPos);
             if (pos.distSqr(origin) <= radiusSq) {
                 BlockState state = level.getBlockState(pos);
