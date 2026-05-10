@@ -18,6 +18,7 @@
 package mod.gottsch.forge.evercrops.core.mixin;
 
 import mod.gottsch.forge.evercrops.core.EverCrops;
+import mod.gottsch.forge.evercrops.core.config.Config;
 import mod.gottsch.forge.evercrops.core.persistence.CropRegistry;
 import mod.gottsch.forge.evercrops.core.persistence.CropState;
 import net.minecraft.core.BlockPos;
@@ -52,10 +53,14 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
 
     @Inject(method = "randomTick", at = @At(value = "HEAD"))
     public void everCrops_randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource randomSource, CallbackInfo ci) {
-        // Some mods extend CropBlock but register blocks whose StateDefinition doesn't
-        // include this block's age property (e.g. vanilla flower blocks used as crop stubs).
-        // Calling getAge() on such a state throws IllegalArgumentException.
-        if (!state.hasProperty(CropBlock.AGE)) {
+        if (!Config.SERVER.cropsEnabled.get()) return;
+        // getAgeProperty() is protected in CropBlock so we cannot call it here.
+        // Instead check by property name: any CropBlock subclass without an "age"
+        // property (modded decorative stubs) is skipped. BeetrootBlock is handled
+        // correctly because its property is also named "age" (range 0-3).
+        // getAge() / getMaxAge() / getStateForAge() dispatch virtually at runtime,
+        // so beetroot growth steps are computed correctly once past this guard.
+        if (state.getProperties().stream().noneMatch(p -> p.getName().equals("age"))) {
             return;
         }
 
@@ -93,9 +98,7 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
                                 if (net.minecraftforge.common.ForgeHooks.onCropsGrowPre(level, pos, currentState, true)) {
                                     EverCrops.LOGGER.debug("growing at -> {}", pos);
                                     currentState = ((CropBlock) (Object) this).getStateForAge(age + 1);
-                                    if (EverCrops.LOGGER.isDebugEnabled()) {
-                                        EverCrops.LOGGER.debug("current state.age -> {}", currentState.getValue(CropBlock.AGE));
-                                    }
+                                    EverCrops.LOGGER.debug("current state.age -> {}", age + 1);
                                     level.setBlock(pos, currentState, 3);
                                     net.minecraftforge.common.ForgeHooks.onCropsGrowPost(level, pos, currentState);
                                 }
@@ -122,7 +125,8 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
 
     @Inject(method = "randomTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
     public void everCrops_randomTick_setBlock(BlockState state, ServerLevel level, BlockPos pos, RandomSource randomSource, CallbackInfo ci) {
-        if (!state.hasProperty(CropBlock.AGE)) {
+        if (!Config.SERVER.cropsEnabled.get()) return;
+        if (state.getProperties().stream().noneMatch(p -> p.getName().equals("age"))) {
             return;
         }
         Optional<CropState> cropState = CropRegistry.get(level, pos);

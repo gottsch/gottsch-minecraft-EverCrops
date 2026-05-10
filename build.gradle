@@ -6,11 +6,11 @@ plugins {
     id 'org.spongepowered.mixin' version '0.7-SNAPSHOT'
 }
 
-version = "${minecraft_version}-${mod_version}"
-
+version = "${mod_version}"
 group = mod_group_id
+
 base {
-    archivesName = mod_id
+    archivesName = project.archives_base_name
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
@@ -97,8 +97,6 @@ dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     if (project.mixin.toBoolean()) annotationProcessor "org.spongepowered:mixin:${mixinVersion}:processor"
 
-    implementation "gottsch:gottschcore:1.20.1-2.2.0"
-
 }
 
 mixin {
@@ -162,14 +160,14 @@ sourceSets {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            artifactId project.archivesBaseName
+            artifactId=project.archives_base_name
             artifact jar
         }
     }
     repositories {
         maven {
             name="localMaven"
-            url "file:///${project.projectDir}/../maven"
+            url="file:///${project.projectDir}/../maven"
         }
     }
 }
