@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `/evercrops simulate <ticks> <radius>` — pretends a chunk has been unloaded for a given number of ticks, so nearby tracked crops will catch up on the next tick. Great for testing.
 - `/evercrops tick <radius>` — forces every tracked crop nearby to try to grow right now, without waiting for the game to randomly pick it.
 - `/evercrops inspect [x y z]` — shows catch-up info for a crop at a given position (defaults to the block at your feet).
+- removed GottschCore dependency. It was only used for Config.
 
 ### Changed
 

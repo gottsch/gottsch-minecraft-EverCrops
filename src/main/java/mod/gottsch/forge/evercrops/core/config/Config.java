@@ -17,7 +17,6 @@
  */
 package mod.gottsch.forge.evercrops.core.config;
 
-import mod.gottsch.forge.gottschcore.config.AbstractConfig;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
@@ -26,23 +25,12 @@ import org.apache.commons.lang3.tuple.Pair;
 /**
  * @author by Mark Gottschling on 3/14/2025
  */
-public class Config extends AbstractConfig {
-
-    public static final ForgeConfigSpec COMMON_SPEC;
-    public static final CommonConfig COMMON;
+public final class Config {
 
     public static final ForgeConfigSpec SERVER_SPEC;
     public static final ServerConfig SERVER;
 
-    // setup as a singleton
-    public static Config instance = new Config();
-
     static {
-        final Pair<CommonConfig, ForgeConfigSpec> commonSpecPair = new ForgeConfigSpec.Builder()
-                .configure(CommonConfig::new);
-        COMMON_SPEC = commonSpecPair.getRight();
-        COMMON = commonSpecPair.getLeft();
-
         final Pair<ServerConfig, ForgeConfigSpec> serverSpecPair = new ForgeConfigSpec.Builder()
                 .configure(ServerConfig::new);
         SERVER_SPEC = serverSpecPair.getRight();
@@ -52,23 +40,7 @@ public class Config extends AbstractConfig {
     private Config() {}
 
     public static void register() {
-        registerCommonConfig();
-        registerServerConfig();
-    }
-
-    private static void registerCommonConfig() {
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, COMMON_SPEC);
-    }
-
-    private static void registerServerConfig() {
         ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, SERVER_SPEC);
-    }
-
-    public static class CommonConfig {
-        public static Logging logging;
-        public CommonConfig(ForgeConfigSpec.Builder builder) {
-            logging = new Logging(builder);
-        }
     }
 
     public static class ServerConfig {
@@ -107,20 +79,5 @@ public class Config extends AbstractConfig {
                     .define("chorusFlowerEnabled", true);
             builder.pop();
         }
-    }
-
-    @Override
-    public String getLogsFolder() {
-        return CommonConfig.logging.folder.get();
-    }
-
-    @Override
-    public String getLogSize() {
-        return CommonConfig.logging.size.get();
-    }
-
-    @Override
-    public String getLoggingLevel() {
-        return CommonConfig.logging.level.get();
     }
 }

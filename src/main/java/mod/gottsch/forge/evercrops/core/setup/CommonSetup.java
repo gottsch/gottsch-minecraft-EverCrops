@@ -18,7 +18,6 @@
 package mod.gottsch.forge.evercrops.core.setup;
 
 import mod.gottsch.forge.evercrops.core.EverCrops;
-import mod.gottsch.forge.evercrops.core.config.Config;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 
@@ -33,8 +32,6 @@ public class CommonSetup {
      * @param event
      */
     public static void init(final FMLCommonSetupEvent event) {
-        // create a treasure2 specific log file
-        Config.instance.addRollingFileAppender(EverCrops.MOD_ID);
-        EverCrops.LOGGER.debug("file appender created");
+        EverCrops.LOGGER.debug("EverCrops common setup complete.");
     }
 }

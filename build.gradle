@@ -97,8 +97,6 @@ dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     if (project.mixin.toBoolean()) annotationProcessor "org.spongepowered:mixin:${mixinVersion}:processor"
 
-    implementation "gottsch:gottschcore:1.20.1-2.2.0"
-
 }
 
 mixin {
