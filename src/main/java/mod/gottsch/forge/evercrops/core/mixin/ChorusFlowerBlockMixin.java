@@ -74,7 +74,10 @@ public abstract class ChorusFlowerBlockMixin extends Block {
 
         Optional<CropState> existing = CropRegistry.get(level, pos);
         if (existing.isEmpty()) {
-            CropRegistry.put(level, pos, CropCatchUp.createState(level, pos));
+            // Wild (worldgen) flowers are tracked only when the player opts in.
+            if (Config.SERVER.trackWildVines.get()) {
+                CropRegistry.put(level, pos, CropCatchUp.createState(level, pos));
+            }
             return;
         }
         CropState cropState = existing.get();
