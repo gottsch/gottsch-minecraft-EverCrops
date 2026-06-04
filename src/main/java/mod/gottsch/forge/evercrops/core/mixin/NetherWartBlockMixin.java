@@ -51,7 +51,7 @@ public abstract class NetherWartBlockMixin extends BushBlock {
         super(properties);
     }
 
-    @Inject(method = "randomTick", at = @At(value = "HEAD"))
+    @Inject(method = "randomTick", at = @At(value = "HEAD"), cancellable = true)
     public void everCrops_randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource randomSource, CallbackInfo ci) {
         if (!Config.SERVER.bushCropsEnabled.get()) return;
         if (!state.hasProperty(NetherWartBlock.AGE)) {
@@ -64,6 +64,7 @@ public abstract class NetherWartBlockMixin extends BushBlock {
         }
         CropState cropState = existing.get();
         int steps = CropCatchUp.beginCatchUp(level, pos, cropState, AVG_GROWTH_TICK_INTERVAL, false);
+        boolean grewAny = false;
         if (steps > 0) {
             BlockState currentState = state;
             for (int i = 0; i < steps; i++) {
@@ -72,10 +73,17 @@ public abstract class NetherWartBlockMixin extends BushBlock {
                     currentState = currentState.setValue(NetherWartBlock.AGE, age + 1);
                     level.setBlock(pos, currentState, 2);
                     net.minecraftforge.common.ForgeHooks.onCropsGrowPost(level, pos, currentState);
+                    grewAny = true;
                 }
             }
         }
         CropRegistry.put(level, pos, cropState);
+        // Catch-up already advanced this nether wart this tick. Skip vanilla's own
+        // randomTick growth so it can't overwrite the caught-up age, nor double-write
+        // the growth timestamp via the setBlock inject below.
+        if (grewAny) {
+            ci.cancel();
+        }
     }
 
     @Inject(method = "randomTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))

@@ -72,6 +72,7 @@ public abstract class BambooStalkBlockMixin extends Block implements Bonemealabl
 
         Optional<CropState> existing = CropRegistry.get(level, pos);
         if (existing.isEmpty()) {
+            // Always register on first tick (see BambooSaplingBlockMixin for rationale).
             CropRegistry.put(level, pos, CropCatchUp.createState(level, pos));
             return;
         }

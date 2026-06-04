@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.5.1] - 2026-06-03
+
+### Added
+
+- Automatic background cleanup (and a new `/evercrops cleanup` command) that clears out leftover tracking entries for crops that were removed by something other than a player breaking them — pistons, explosions, water, or other mods. This keeps your world's crop data tidy over time. New server settings let you change how often it runs, or turn it off (it runs every 30 minutes by default).
+- A new **Track Wild Plants** server setting (`trackWildVines`, off by default). When off, naturally-occurring wild kelp, vines, and chorus flowers aren't tracked for catch-up — keeping your world's saved data small even near big oceans and the Nether. Plants you place (or that villagers and machines plant) are always tracked. Turn it on if you want wild plants to catch up too. Bamboo is not affected by this setting — it always tracks regardless.
+
+### Changed
+
+- `/evercrops inspect` now also shows the actual block at that spot and its current growth stage/age, making progress easy to see — especially for saplings, whose first growth step is invisible until the tree pops up.
+
+### Fixed
+
+- Melon and pumpkin stems could sometimes spawn more than one melon or pumpkin at the same moment while catching up after you'd been away. A stem now produces at most one, just like normal.
+- Crops left alone for a very long time, or sitting in a protected or claimed area, could cause a brief stutter when their chunk reloaded. Catch-up now stops doing extra work as soon as a crop is fully grown or its growth is blocked.
+- Fixed a case where a crop could lose a little of its catch-up growth in the very instant it caught up. Crops now keep all of it.
+- Kelp and vines no longer leave leftover tracking data behind each time they grow a block — their tracking now follows the plant as it grows up or down. Previously this could slowly pile up near oceans and the Nether.
+- Bamboo placed by the player was never being tracked and wouldn't catch up on growth while you were away. Fixed.
+- Bamboo sprouts (the small starting plant before the stalk appears) now properly shoot up to a full stalk during catch-up, instead of waiting for a random tick after you return.
+- Kelp and vines no longer lose their catch-up tracking when you harvest them. Whether you break the tip or a block anywhere in the middle of the plant, the remaining piece keeps its catch-up data and stays tracked.
+
+---
+
 ## [3.5.0] - 2026-5-9
 
 ### Added
@@ -23,11 +46,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `/evercrops simulate <ticks> <radius>` — pretends a chunk has been unloaded for a given number of ticks, so nearby tracked crops will catch up on the next tick. Great for testing.
 - `/evercrops tick <radius>` — forces every tracked crop nearby to try to grow right now, without waiting for the game to randomly pick it.
 - `/evercrops inspect [x y z]` — shows catch-up info for a crop at a given position (defaults to the block at your feet).
-- removed GottschCore dependency. It was only used for Config.
 
 ### Changed
 
 - Crop data is now saved directly inside your world folder instead of a separate database. Simpler, more reliable, and no extra files to worry about.
+- removed GottschCore dependency. It was only used for Config.
 
 ### Fixed
 

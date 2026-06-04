@@ -53,7 +53,7 @@ public abstract class StemBlockMixin extends BushBlock implements BonemealableBl
         super(properties);
     }
 
-    @Inject(method = "randomTick", at = @At(value = "HEAD"))
+    @Inject(method = "randomTick", at = @At(value = "HEAD"), cancellable = true)
     public void everCrops_randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource randomSource, CallbackInfo ci) {
         if (!Config.SERVER.stemCropsEnabled.get()) return;
         // Guard against mods that extend StemBlock but use block states that don't have
@@ -85,29 +85,46 @@ public abstract class StemBlockMixin extends BushBlock implements BonemealableBl
                         BlockState currentState = state;
                         int quotient = (int) (Math.floor((double) growthDelta / AVG_GROWTH_TICK_INTERVAL));
                         long remainder = growthDelta % AVG_GROWTH_TICK_INTERVAL;
+                        boolean grewAny = false;
                         for (int i = 0; i < quotient; i++) {
-                            if (net.minecraftforge.common.ForgeHooks.onCropsGrowPre(level, pos, currentState, true)) {
-                                int age = currentState.getValue(StemBlock.AGE);
-                                if (age < 7) {
-                                    currentState = currentState.setValue(StemBlock.AGE, age + 1);
-                                    level.setBlock(pos, currentState, 3);
-                                } else {
-                                    IStemBlockMixin stemBlock = (IStemBlockMixin) (Object) this;
-                                    Direction direction = Direction.Plane.HORIZONTAL.getRandomDirection(randomSource);
-                                    BlockPos blockpos = pos.relative(direction);
-                                    BlockState blockstate = level.getBlockState(blockpos.below());
-                                    if (level.isEmptyBlock(blockpos) && (blockstate.canSustainPlant(level, blockpos.below(), Direction.UP, stemBlock.getFruit()) || blockstate.is(Blocks.FARMLAND) || blockstate.is(BlockTags.DIRT))) {
-                                        level.setBlockAndUpdate(blockpos, stemBlock.getFruit().defaultBlockState());
-                                        level.setBlockAndUpdate(pos, stemBlock.getFruit().getAttachedStem().defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, direction));
-                                    }
-                                }
+                            // Another mod (land claim/protection, etc.) vetoed growth.
+                            if (!net.minecraftforge.common.ForgeHooks.onCropsGrowPre(level, pos, currentState, true)) {
+                                break;
+                            }
+                            int age = currentState.getValue(StemBlock.AGE);
+                            if (age < 7) {
+                                currentState = currentState.setValue(StemBlock.AGE, age + 1);
+                                level.setBlock(pos, currentState, 3);
                                 net.minecraftforge.common.ForgeHooks.onCropsGrowPost(level, pos, currentState);
+                                grewAny = true;
+                            } else {
+                                // Mature stem: attempt to spread fruit once, then stop.
+                                // A stem yields at most one fruit (it converts to an
+                                // attached stem), so catch-up must not spawn several.
+                                IStemBlockMixin stemBlock = (IStemBlockMixin) (Object) this;
+                                Direction direction = Direction.Plane.HORIZONTAL.getRandomDirection(randomSource);
+                                BlockPos blockpos = pos.relative(direction);
+                                BlockState blockstate = level.getBlockState(blockpos.below());
+                                if (level.isEmptyBlock(blockpos) && (blockstate.canSustainPlant(level, blockpos.below(), Direction.UP, stemBlock.getFruit()) || blockstate.is(Blocks.FARMLAND) || blockstate.is(BlockTags.DIRT))) {
+                                    level.setBlockAndUpdate(blockpos, stemBlock.getFruit().defaultBlockState());
+                                    level.setBlockAndUpdate(pos, stemBlock.getFruit().getAttachedStem().defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, direction));
+                                    net.minecraftforge.common.ForgeHooks.onCropsGrowPost(level, pos, currentState);
+                                    grewAny = true;
+                                }
+                                break;
                             }
                         }
                         cropState.setLastGrowthGameTime(level.getGameTime() - remainder);
                         cropState.setLastGrowthLightLevel(level.getRawBrightness(pos, 0));
                         cropState.setLastCallGameTime(level.getGameTime());
                         cropState.setLastCallLightLevel(level.getRawBrightness(pos, 0));
+                        // Catch-up already advanced this stem this tick. Skip vanilla's own
+                        // randomTick growth so it can't overwrite the caught-up age, spread a
+                        // second fruit, nor double-write the growth timestamp via the
+                        // setBlock inject below.
+                        if (grewAny) {
+                            ci.cancel();
+                        }
                     } else {
                         cropState.setLastCallGameTime(level.getGameTime());
                         cropState.setLastCallLightLevel(level.getRawBrightness(pos, 0));
