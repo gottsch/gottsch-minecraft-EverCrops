@@ -51,7 +51,7 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
         super(properties);
     }
 
-    @Inject(method = "randomTick", at = @At(value = "HEAD"))
+    @Inject(method = "randomTick", at = @At(value = "HEAD"), cancellable = true)
     public void everCrops_randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource randomSource, CallbackInfo ci) {
         if (!Config.SERVER.cropsEnabled.get()) return;
         // getAgeProperty() is protected in CropBlock so we cannot call it here.
@@ -91,23 +91,34 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
                         BlockState currentState = state;
                         int quotient = (int) (Math.floor((double) growthDelta / AVG_GROWTH_TICK_INTERVAL));
                         long remainder = growthDelta % AVG_GROWTH_TICK_INTERVAL;
+                        boolean grewAny = false;
                         for (int i = 0; i < quotient; i++) {
                             int age = ((CropBlock) (Object) this).getAge(currentState);
-                            if (age < ((CropBlock) (Object) this).getMaxAge()) {
-                                EverCrops.LOGGER.debug("age is still good -> {}", age);
-                                if (net.minecraftforge.common.ForgeHooks.onCropsGrowPre(level, pos, currentState, true)) {
-                                    EverCrops.LOGGER.debug("growing at -> {}", pos);
-                                    currentState = ((CropBlock) (Object) this).getStateForAge(age + 1);
-                                    EverCrops.LOGGER.debug("current state.age -> {}", age + 1);
-                                    level.setBlock(pos, currentState, 3);
-                                    net.minecraftforge.common.ForgeHooks.onCropsGrowPost(level, pos, currentState);
-                                }
+                            // Fully grown: remaining steps are no-ops, stop here.
+                            if (age >= ((CropBlock) (Object) this).getMaxAge()) {
+                                break;
                             }
+                            // Another mod (land claim/protection, etc.) vetoed growth.
+                            // Stop rather than spinning the remaining steps firing events.
+                            if (!net.minecraftforge.common.ForgeHooks.onCropsGrowPre(level, pos, currentState, true)) {
+                                break;
+                            }
+                            currentState = ((CropBlock) (Object) this).getStateForAge(age + 1);
+                            level.setBlock(pos, currentState, 3);
+                            net.minecraftforge.common.ForgeHooks.onCropsGrowPost(level, pos, currentState);
+                            grewAny = true;
                         }
                         cropState.setLastGrowthGameTime(level.getGameTime() - remainder);
                         cropState.setLastGrowthLightLevel(level.getRawBrightness(pos, 0));
                         cropState.setLastCallGameTime(level.getGameTime());
                         cropState.setLastCallLightLevel(level.getRawBrightness(pos, 0));
+                        // Catch-up already advanced this crop this tick. Skip vanilla's own
+                        // randomTick growth so it can't overwrite the caught-up age with a
+                        // lower one (computed from the pre-catch-up state), nor double-write
+                        // the growth timestamp via the setBlock inject below.
+                        if (grewAny) {
+                            ci.cancel();
+                        }
                     } else {
                         cropState.setLastCallGameTime(level.getGameTime());
                         cropState.setLastCallLightLevel(level.getRawBrightness(pos, 0));

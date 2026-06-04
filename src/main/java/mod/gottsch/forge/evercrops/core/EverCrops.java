@@ -18,6 +18,7 @@
 package mod.gottsch.forge.evercrops.core;
 
 import mod.gottsch.forge.evercrops.core.config.Config;
+import mod.gottsch.forge.evercrops.core.event.ModEvents;
 import mod.gottsch.forge.evercrops.core.setup.CommonSetup;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
@@ -37,6 +38,7 @@ public class EverCrops {
 
     public EverCrops() {
         Config.register();
+        ModEvents.registerPredicates();
 
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus.addListener(CommonSetup::init);

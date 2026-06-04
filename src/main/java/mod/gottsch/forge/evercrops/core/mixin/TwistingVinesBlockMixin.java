@@ -58,7 +58,7 @@ public abstract class TwistingVinesBlockMixin extends Block {
         super(properties);
     }
 
-    @Inject(method = "randomTick", at = @At(value = "HEAD"))
+    @Inject(method = "randomTick", at = @At(value = "HEAD"), cancellable = true)
     public void everCrops_randomTick_twisting(BlockState state, ServerLevel level, BlockPos pos,
                                               RandomSource random, CallbackInfo ci) {
         if (!(((Object)this) instanceof TwistingVinesBlock)) return;
@@ -67,7 +67,11 @@ public abstract class TwistingVinesBlockMixin extends Block {
 
         Optional<CropState> existing = CropRegistry.get(level, pos);
         if (existing.isEmpty()) {
-            CropRegistry.put(level, pos, CropCatchUp.createState(level, pos));
+            // Wild (worldgen) heads are tracked only when the player opts in. Placed ones are
+            // registered via the place event, and tracking follows the head via TAIL relocation.
+            if (Config.SERVER.trackWildVines.get()) {
+                CropRegistry.put(level, pos, CropCatchUp.createState(level, pos));
+            }
             return;
         }
         CropState cropState = existing.get();
@@ -89,11 +93,36 @@ public abstract class TwistingVinesBlockMixin extends Block {
                 currentState = newHead;
             }
             if (!currentPos.equals(pos)) {
+                // Catch-up moved the head: relocate the entry and cancel vanilla so it can't
+                // grow one more step and orphan the entry we just relocated.
                 CropRegistry.remove(level, pos);
+                CropRegistry.put(level, currentPos, cropState);
+                ci.cancel();
+            } else {
+                CropRegistry.put(level, pos, cropState);
             }
-            CropRegistry.put(level, currentPos, cropState);
         } else {
             CropRegistry.put(level, pos, cropState);
+        }
+    }
+
+    /**
+     * After vanilla grows the head one block up (the common online case), {@code pos} is now a
+     * body block. Relocate the tracking entry to the new head so it follows the plant instead of
+     * being orphaned. Removes the entry if the head is gone entirely.
+     */
+    @Inject(method = "randomTick", at = @At("TAIL"))
+    public void everCrops_randomTick_twisting_relocate(BlockState state, ServerLevel level, BlockPos pos,
+                                                       RandomSource random, CallbackInfo ci) {
+        if (!(((Object)this) instanceof TwistingVinesBlock)) return;
+        if (!Config.SERVER.twistingVinesEnabled.get()) return;
+        Optional<CropState> entry = CropRegistry.get(level, pos);
+        if (entry.isEmpty()) return;
+        if (level.getBlockState(pos).is((Block)(Object) this)) return; // head still here
+        CropRegistry.remove(level, pos);
+        BlockPos newHead = pos.above(); // twisting vines grow up
+        if (level.getBlockState(newHead).is((Block)(Object) this)) {
+            CropRegistry.put(level, newHead, entry.get());
         }
     }
 }

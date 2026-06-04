@@ -30,6 +30,7 @@ import net.minecraft.world.level.block.BonemealableBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -37,41 +38,67 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Optional;
 
 /**
- * Registers a CropState for bamboo saplings so that when the sapling grows into
- * a BambooStalkBlock the position already has tracking data. Without this, bamboo
- * placed from inventory creates a BambooSaplingBlock (a different class), which is
- * never caught by the BambooStalkBlockMixin until the stalk's first natural random tick.
+ * Catch-up growth for bamboo saplings (BambooSaplingBlock).
  *
- * When the sapling grows, vanilla's updateShape converts the sapling at pos to a
- * BambooStalkBlock. The CropState registered here carries over to that bottom stalk,
- * where BambooStalkBlockMixin picks it up on its next random tick.
+ * <p>BambooItem is not a BlockItem, so EntityPlaceEvent never fires on player placement.
+ * The first-tick path is therefore the only registration route for player-placed bamboo.
  *
- * No cancel: vanilla randomTick must still run so the sapling can actually grow.
- * Call timestamps are kept fresh while the chunk stays loaded so the resulting
- * stalk does not trigger premature catch-up during normal (chunk-loaded) gameplay.
+ * <p>When the chunk has been offline long enough, we call performBonemeal (one growBamboo
+ * call: places a BambooStalkBlock at pos.above(); the sapling at pos self-converts via
+ * updateShape). The CropState timestamps are left unchanged so the stalk at pos inherits
+ * the full offline delta and applies multi-step column catch-up on its own first randomTick.
  *
  * @author Mark Gottschling on 5/5/2026
  */
 @Mixin(BambooSaplingBlock.class)
 public abstract class BambooSaplingBlockMixin extends Block implements BonemealableBlock {
 
+    /** Mirrors the 1/3 random gate in BambooSaplingBlock.randomTick (same as stalk). */
+    @Unique
+    private static final int AVG_GROWTH_TICK_INTERVAL = 4500;
+
     public BambooSaplingBlockMixin(BlockBehaviour.Properties properties) {
         super(properties);
     }
 
-    @Inject(method = "randomTick", at = @At(value = "HEAD"))
+    @Inject(method = "randomTick", at = @At(value = "HEAD"), cancellable = true)
     public void everCrops_randomTick(BlockState state, ServerLevel level, BlockPos pos,
                                      RandomSource random, CallbackInfo ci) {
         if (!Config.SERVER.bambooEnabled.get()) return;
 
         Optional<CropState> existing = CropRegistry.get(level, pos);
         if (existing.isEmpty()) {
+            // Always register on first tick (see class javadoc for rationale).
+            // No cancel — let vanilla attempt natural growth on this same tick.
             CropRegistry.put(level, pos, CropCatchUp.createState(level, pos));
+            return;
+        }
+
+        CropState cropState = existing.get();
+        long now         = level.getGameTime();
+        long callDelta   = now - cropState.getLastCallGameTime();
+        long growthDelta = now - cropState.getLastGrowthGameTime();
+
+        if (callDelta > 2 * 1350L && growthDelta > 2L * AVG_GROWTH_TICK_INTERVAL) {
+            // Chunk was offline long enough — attempt one sapling→stalk growth step.
+            if (level.isEmptyBlock(pos.above()) && level.getRawBrightness(pos.above(), 0) >= 9) {
+                BambooSaplingBlock self = (BambooSaplingBlock)(Object) this;
+                self.performBonemeal(level, random, pos, state);
+                // Timestamps intentionally left unchanged. The BambooStalkBlock now at pos
+                // inherits this CropState's stale lastGrowthGameTime and will trigger
+                // multi-step column catch-up via BambooStalkBlockMixin on its first tick.
+                CropRegistry.put(level, pos, cropState);
+                ci.cancel();
+            } else {
+                // Growth blocked (ceiling above or low light) — persist and let vanilla run.
+                CropRegistry.put(level, pos, cropState);
+            }
         } else {
-            CropState cropState = existing.get();
-            cropState.setLastCallGameTime(level.getGameTime())
+            // Normal loaded-chunk tick: refresh call timestamp for future delta calibration.
+            cropState.setLastCallGameTime(now)
                      .setLastCallLightLevel(level.getRawBrightness(pos, 0));
             CropRegistry.put(level, pos, cropState);
+            // No cancel — vanilla attempts natural growth.
         }
     }
 }

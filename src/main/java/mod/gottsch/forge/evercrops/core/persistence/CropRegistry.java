@@ -19,8 +19,10 @@ package mod.gottsch.forge.evercrops.core.persistence;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.Optional;
+import java.util.function.Predicate;
 
 /**
  * Static facade over {@link CropSavedData}.
@@ -41,5 +43,15 @@ public class CropRegistry {
 
     public static void remove(ServerLevel level, BlockPos pos) {
         CropSavedData.getOrCreate(level).remove(pos);
+    }
+
+    /**
+     * Removes stale registry entries in loaded chunks (positions whose block is no
+     * longer a tracked crop). See {@link CropSavedData#cleanupStale(ServerLevel, Predicate)}.
+     *
+     * @return number of entries removed
+     */
+    public static int cleanup(ServerLevel level, Predicate<BlockState> isCropBlock) {
+        return CropSavedData.getOrCreate(level).cleanupStale(level, isCropBlock);
     }
 }
