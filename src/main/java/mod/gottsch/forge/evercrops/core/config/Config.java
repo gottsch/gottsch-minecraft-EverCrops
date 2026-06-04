@@ -73,6 +73,9 @@ public class Config extends AbstractConfig {
         public final ModConfigSpec.BooleanValue weepingVinesEnabled;
         public final ModConfigSpec.BooleanValue caveVinesEnabled;
         public final ModConfigSpec.BooleanValue chorusFlowerEnabled;
+        public final ModConfigSpec.BooleanValue trackWildVines;
+        public final ModConfigSpec.BooleanValue autoCleanupEnabled;
+        public final ModConfigSpec.IntValue     autoCleanupIntervalTicks;
 
         public ServerConfig(ModConfigSpec.Builder builder) {
             builder.comment("Controls which crop categories receive catch-up growth.")
@@ -125,6 +128,30 @@ public class Config extends AbstractConfig {
                              "Due to branching growth mechanics, at most one growth step is applied per catch-up event " +
                              "to prevent excessive structure expansion.")
                     .define("chorusFlowerEnabled", true);
+
+            trackWildVines = builder
+                    .comment("Track naturally-generated (wild) kelp, twisting/weeping/cave vines, and chorus flowers for catch-up growth. " +
+                             "When false (default), only placed plants of these types are tracked (by a player, villager, or automation), " +
+                             "which keeps the saved registry small near oceans and the Nether. When true, wild ones are tracked too — " +
+                             "kelp and vines relocate their tracking entry as they grow so they never leave stale entries behind. " +
+                             "(Bamboo is unaffected by this setting — it always registers on first tick regardless.)")
+                    .define("trackWildVines", false);
+
+            builder.pop();
+            builder.comment("Registry cleanup settings.").push("cleanup");
+
+            autoCleanupEnabled = builder
+                    .comment("Periodically scan the crop registry and remove entries whose block is no longer a tracked crop " +
+                             "(e.g. crops destroyed by pistons, explosions, fluids, or other mods that bypass the player BreakEvent). " +
+                             "Only loaded chunks are checked; unloaded entries are left untouched. " +
+                             "Prevents the evercrops.dat registry from slowly accumulating stale entries over time.")
+                    .define("autoCleanupEnabled", true);
+
+            autoCleanupIntervalTicks = builder
+                    .comment("How often (in game ticks) the automatic cleanup scan runs per dimension. " +
+                             "1200 = 1 minute, 36000 = 30 minutes, 72000 = 60 minutes. " +
+                             "The scan only touches loaded chunks, so it is cheap at typical values.")
+                    .defineInRange("autoCleanupIntervalTicks", 36_000, 1_200, 288_000);
 
             builder.pop();
         }

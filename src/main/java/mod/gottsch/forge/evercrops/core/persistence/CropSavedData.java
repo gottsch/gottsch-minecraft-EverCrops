@@ -22,13 +22,17 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.saveddata.SavedData;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  * Per-dimension crop state storage backed by Minecraft's SavedData system.
@@ -135,6 +139,36 @@ public class CropSavedData extends SavedData {
         }
         if (count > 0) setDirty();
         return count;
+    }
+
+    /**
+     * Removes entries whose block is no longer a tracked crop, but only for positions
+     * in currently loaded chunks. Unloaded entries are intentionally left untouched —
+     * the crop may still be alive; we just can't confirm it without loading the chunk.
+     *
+     * <p>This is the safety net for non-player block removals (pistons, explosions,
+     * fluids, other mods' {@code setBlock} calls) that bypass {@code BlockEvent.BreakEvent}
+     * and would otherwise leave the registry slowly accumulating stale entries.
+     *
+     * <p>Called periodically by the auto-cleanup tick handler and by the
+     * {@code /evercrops cleanup} command.
+     *
+     * @param level       the dimension to scan
+     * @param isCropBlock  predicate identifying a block state that is still a tracked crop
+     * @return number of stale entries removed
+     */
+    public int cleanupStale(ServerLevel level, Predicate<BlockState> isCropBlock) {
+        List<Long> toRemove = new ArrayList<>();
+        for (long packedPos : crops.keySet()) {
+            BlockPos pos = BlockPos.of(packedPos);
+            if (!level.isLoaded(pos)) continue; // skip — can't confirm without loading chunk
+            if (!isCropBlock.test(level.getBlockState(pos))) {
+                toRemove.add(packedPos);
+            }
+        }
+        toRemove.forEach(crops::remove);
+        if (!toRemove.isEmpty()) setDirty();
+        return toRemove.size();
     }
 
     /** Returns all tracked positions as packed longs (see {@link BlockPos#asLong()}). */

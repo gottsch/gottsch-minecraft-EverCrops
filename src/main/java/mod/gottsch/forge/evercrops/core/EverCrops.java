@@ -18,6 +18,7 @@
 package mod.gottsch.forge.evercrops.core;
 
 import mod.gottsch.forge.evercrops.core.config.Config;
+import mod.gottsch.forge.evercrops.core.event.ModEvents;
 import mod.gottsch.forge.evercrops.core.setup.CommonSetup;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -37,6 +38,7 @@ public class EverCrops {
 
     public EverCrops(IEventBus modEventBus, ModContainer modContainer) {
         Config.register(modContainer);
+        ModEvents.registerPredicates();
         modEventBus.addListener(CommonSetup::init);
     }
 }
