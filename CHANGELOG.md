@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.5.2] - 2026-06-06
+
+### Changed
+
+- Version updated to stay in step with the NeoForge version of EverCrops. No gameplay changes.
+
+---
+
 ## [3.5.1] - 2026-06-03
 
 ### Added
