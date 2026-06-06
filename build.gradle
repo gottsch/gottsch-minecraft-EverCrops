@@ -61,7 +61,6 @@ repositories {
 }
 
 dependencies {
-    implementation "gottsch:gottschcore-neoforge-${minecraft_version}:${gottschcore_version}"
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
@@ -77,7 +76,6 @@ var generateModMetadata = tasks.register("generateModMetadata", ProcessResources
             mod_version              : mod_version,
             mod_authors              : mod_authors,
             mod_description          : mod_description,
-            gottschcore_version_range: gottschcore_version_range,
     ]
     inputs.properties replaceProperties
     expand replaceProperties

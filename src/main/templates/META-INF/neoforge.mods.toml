@@ -31,9 +31,3 @@ config="${mod_id}.mixins.json"
     ordering="NONE"
     side="BOTH"
 
-[[dependencies.${mod_id}]]
-    modId="gottschcore"
-    type="required"
-    versionRange="${gottschcore_version_range}"
-    ordering="BEFORE"
-    side="BOTH"

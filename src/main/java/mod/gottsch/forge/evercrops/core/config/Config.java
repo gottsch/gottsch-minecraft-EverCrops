@@ -17,31 +17,23 @@
  */
 package mod.gottsch.forge.evercrops.core.config;
 
-import mod.gottsch.neo.gottschcore.config.AbstractConfig;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
+ * Server config for EverCrops. Uses NeoForge's ModConfigSpec directly — no
+ * external library dependency.
+ *
  * @author by Mark Gottschling on 3/14/2025
  */
-public class Config extends AbstractConfig {
-
-    public static final ModConfigSpec COMMON_SPEC;
-    public static final CommonConfig COMMON;
+public final class Config {
 
     public static final ModConfigSpec SERVER_SPEC;
     public static final ServerConfig SERVER;
 
-    public static Config instance = new Config();
-
     static {
-        final Pair<CommonConfig, ModConfigSpec> commonSpecPair = new ModConfigSpec.Builder()
-                .configure(CommonConfig::new);
-        COMMON_SPEC = commonSpecPair.getRight();
-        COMMON = commonSpecPair.getLeft();
-
         final Pair<ServerConfig, ModConfigSpec> serverSpecPair = new ModConfigSpec.Builder()
                 .configure(ServerConfig::new);
         SERVER_SPEC = serverSpecPair.getRight();
@@ -51,15 +43,7 @@ public class Config extends AbstractConfig {
     private Config() {}
 
     public static void register(ModContainer modContainer) {
-        modContainer.registerConfig(ModConfig.Type.COMMON, COMMON_SPEC);
         modContainer.registerConfig(ModConfig.Type.SERVER, SERVER_SPEC);
-    }
-
-    public static class CommonConfig {
-        public static Logging logging;
-        public CommonConfig(ModConfigSpec.Builder builder) {
-            logging = new Logging(builder);
-        }
     }
 
     public static class ServerConfig {
@@ -155,20 +139,5 @@ public class Config extends AbstractConfig {
 
             builder.pop();
         }
-    }
-
-    @Override
-    public String getLogsFolder() {
-        return CommonConfig.logging.folder.get();
-    }
-
-    @Override
-    public String getLogSize() {
-        return CommonConfig.logging.size.get();
-    }
-
-    @Override
-    public String getLoggingLevel() {
-        return CommonConfig.logging.level.get();
     }
 }

@@ -18,7 +18,6 @@
 package mod.gottsch.forge.evercrops.core.setup;
 
 import mod.gottsch.forge.evercrops.core.EverCrops;
-import mod.gottsch.forge.evercrops.core.config.Config;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 
 /**
@@ -30,7 +29,6 @@ import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 public class CommonSetup {
 
     public static void init(final FMLCommonSetupEvent event) {
-        Config.instance.addRollingFileAppender(EverCrops.MOD_ID);
-        EverCrops.LOGGER.debug("file appender created");
+        EverCrops.LOGGER.debug("EverCrops common setup complete.");
     }
 }
