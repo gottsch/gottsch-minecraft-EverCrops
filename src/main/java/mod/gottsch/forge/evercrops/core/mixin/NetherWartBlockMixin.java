@@ -63,6 +63,12 @@ public abstract class NetherWartBlockMixin extends BushBlock {
             return;
         }
         CropState cropState = existing.get();
+        // Harvested in place (e.g. Harvest With Ease) — reset the growth clock so pending
+        // catch-up isn't re-applied to the replant.
+        if (CropCatchUp.handleInPlaceHarvest(level, pos, cropState, state.getValue(NetherWartBlock.AGE))) {
+            CropRegistry.put(level, pos, cropState);
+            return;
+        }
         int steps = CropCatchUp.beginCatchUp(level, pos, cropState, AVG_GROWTH_TICK_INTERVAL, false);
         boolean grewAny = false;
         if (steps > 0) {

@@ -34,6 +34,13 @@ public class CropState implements Serializable {
     private int lastCallLightLevel;
     private int lastGrowthLightLevel;
 
+    /**
+     * Last age/stage value observed for this block, used to detect in-place harvests
+     * (e.g. Harvest With Ease, vanilla sweet-berry harvest) that reset the age without
+     * firing a break/place event. {@code -1} means "not yet observed".
+     */
+    private int lastAge = -1;
+
     public CropState() {}
 
     public long getLastCallGameTime() {
@@ -72,16 +79,25 @@ public class CropState implements Serializable {
         return this;
     }
 
+    public int getLastAge() {
+        return lastAge;
+    }
+
+    public CropState setLastAge(int lastAge) {
+        this.lastAge = lastAge;
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         CropState cropState = (CropState) o;
-        return lastCallGameTime == cropState.lastCallGameTime && lastGrowthGameTime == cropState.lastGrowthGameTime && lastCallLightLevel == cropState.lastCallLightLevel && lastGrowthLightLevel == cropState.lastGrowthLightLevel;
+        return lastCallGameTime == cropState.lastCallGameTime && lastGrowthGameTime == cropState.lastGrowthGameTime && lastCallLightLevel == cropState.lastCallLightLevel && lastGrowthLightLevel == cropState.lastGrowthLightLevel && lastAge == cropState.lastAge;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(lastCallGameTime, lastGrowthGameTime, lastCallLightLevel, lastGrowthLightLevel);
+        return Objects.hash(lastCallGameTime, lastGrowthGameTime, lastCallLightLevel, lastGrowthLightLevel, lastAge);
     }
 
     @Override
@@ -91,6 +107,7 @@ public class CropState implements Serializable {
                 ", lastGrowthGameTime=" + lastGrowthGameTime +
                 ", lastCallLightLevel=" + lastCallLightLevel +
                 ", lastGrowthLightLevel=" + lastGrowthLightLevel +
+                ", lastAge=" + lastAge +
                 '}';
     }
 
