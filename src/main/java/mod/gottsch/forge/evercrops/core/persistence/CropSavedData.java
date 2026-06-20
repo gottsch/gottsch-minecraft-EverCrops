@@ -74,7 +74,9 @@ public class CropSavedData extends SavedData {
             state.setLastCallGameTime(entry.getLong("lastCallTime"))
                  .setLastGrowthGameTime(entry.getLong("lastGrowthTime"))
                  .setLastCallLightLevel(entry.getInt("lastCallLight"))
-                 .setLastGrowthLightLevel(entry.getInt("lastGrowthLight"));
+                 .setLastGrowthLightLevel(entry.getInt("lastGrowthLight"))
+                 // Pre-existing saves have no lastAge; -1 = "not yet observed".
+                 .setLastAge(entry.contains("lastAge") ? entry.getInt("lastAge") : -1);
             data.crops.put(posKey, state);
         }
         return data;
@@ -91,6 +93,7 @@ public class CropSavedData extends SavedData {
             e.putLong("lastGrowthTime", s.getLastGrowthGameTime());
             e.putInt("lastCallLight", s.getLastCallLightLevel());
             e.putInt("lastGrowthLight", s.getLastGrowthLightLevel());
+            e.putInt("lastAge", s.getLastAge());
             list.add(e);
         }
         tag.put("crops", list);

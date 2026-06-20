@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.3] - 2026-06-20
+
+### Fixed
+
+- Fixed a compatibility issue with right-click harvesting mods such as Harvest With Ease. After you'd been away and a crop caught up on its missed growth, harvesting and replanting it could make it instantly grow back — sometimes several times — because the replanted crop was mistaken for the same fully-grown one. Harvesting now properly resets a crop's growth timer, so replanted crops grow back at the normal rate. (This also stops vanilla sweet berry bushes from instantly refilling right after you pick them.)
+
 ## [3.5.2] - 2026-06-06
 
 ### Changed
