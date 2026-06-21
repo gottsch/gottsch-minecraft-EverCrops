@@ -42,5 +42,7 @@ public class EverCrops {
 
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus.addListener(CommonSetup::init);
+        modEventBus.addListener(Config::onConfigLoading);
+        modEventBus.addListener(Config::onConfigReloading);
     }
 }

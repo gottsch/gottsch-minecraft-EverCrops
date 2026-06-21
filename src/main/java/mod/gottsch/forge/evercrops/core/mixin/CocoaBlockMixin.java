@@ -66,7 +66,7 @@ public abstract class CocoaBlockMixin extends HorizontalDirectionalBlock impleme
         CropState cropState = existing.get();
         // Harvested in place (e.g. Harvest With Ease) — reset the growth clock so pending
         // catch-up isn't re-applied to the replant.
-        if (CropCatchUp.handleInPlaceHarvest(level, pos, cropState, state.getValue(CocoaBlock.AGE))) {
+        if (CropCatchUp.handleInPlaceHarvest(level, pos, cropState, state)) {
             CropRegistry.put(level, pos, cropState);
             return;
         }

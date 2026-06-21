@@ -17,10 +17,17 @@
  */
 package mod.gottsch.forge.evercrops.core.config;
 
+import mod.gottsch.forge.evercrops.core.persistence.CropEligibility;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.config.ModConfigEvent;
 import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author by Mark Gottschling on 3/14/2025
@@ -43,6 +50,38 @@ public final class Config {
         ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, SERVER_SPEC);
     }
 
+    // -------------------------------------------------
+    // Dynamic config application (denylist → CropEligibility)
+    // -------------------------------------------------
+
+    /** Config-load listener (mod event bus). Applies the denylist when our SERVER spec loads. */
+    public static void onConfigLoading(final ModConfigEvent.Loading event) {
+        applyIfServer(event);
+    }
+
+    /** Config-reload listener (mod event bus). Re-applies the denylist on /reload or file edit. */
+    public static void onConfigReloading(final ModConfigEvent.Reloading event) {
+        applyIfServer(event);
+    }
+
+    private static void applyIfServer(ModConfigEvent event) {
+        if (event.getConfig().getSpec() == SERVER_SPEC) {
+            applyDenylist();
+        }
+    }
+
+    /** Parse the configured block ids and push them to {@link CropEligibility}. Invalid ids are skipped. */
+    private static void applyDenylist() {
+        Set<ResourceLocation> ids = new LinkedHashSet<>();
+        for (String entry : SERVER.denylist.get()) {
+            ResourceLocation id = ResourceLocation.tryParse(entry);
+            if (id != null) {
+                ids.add(id);
+            }
+        }
+        CropEligibility.setDenylist(ids);
+    }
+
     public static class ServerConfig {
         public final ForgeConfigSpec.BooleanValue cropsEnabled;
         public final ForgeConfigSpec.BooleanValue stemCropsEnabled;
@@ -54,6 +93,8 @@ public final class Config {
         public final ForgeConfigSpec.BooleanValue weepingVinesEnabled;
         public final ForgeConfigSpec.BooleanValue caveVinesEnabled;
         public final ForgeConfigSpec.BooleanValue chorusFlowerEnabled;
+        public final ForgeConfigSpec.BooleanValue moddedCropsEnabled;
+        public final ForgeConfigSpec.ConfigValue<List<? extends String>> denylist;
         public final ForgeConfigSpec.BooleanValue trackWildVines;
         public final ForgeConfigSpec.BooleanValue autoCleanupEnabled;
         public final ForgeConfigSpec.IntValue     autoCleanupIntervalTicks;
@@ -80,6 +121,16 @@ public final class Config {
                     .define("caveVinesEnabled", true);
             chorusFlowerEnabled = builder.comment("Enable catch-up growth for chorus flowers")
                     .define("chorusFlowerEnabled", true);
+            moddedCropsEnabled = builder
+                    .comment("Enable catch-up growth for modded growables that pass capability detection (a random-ticking block",
+                             "with an 'age'/'stage'/'colony_age' growth property) but do not match any known vanilla category. Default true.")
+                    .define("moddedCropsEnabled", true);
+            denylist = builder
+                    .comment("Block ids to exclude from capability detection — structural false-positives whose growth property",
+                             "is not actually a growth axis (e.g. fire spread, ice melt). Use full ids like \"minecraft:fire\".")
+                    .defineList("denylist",
+                            List.of("minecraft:fire", "minecraft:soul_fire", "minecraft:frosted_ice"),
+                            o -> o instanceof String);
             trackWildVines = builder
                     .comment("Track naturally-generated (wild) kelp, twisting/weeping/cave vines, and chorus flowers for catch-up growth.",
                              "When false (default), only placed plants of these types are tracked (player, villager, automation), keeping the",

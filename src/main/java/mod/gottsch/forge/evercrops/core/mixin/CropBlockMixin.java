@@ -71,7 +71,7 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
             // Harvested in place (e.g. Harvest With Ease) — the age dropped without a
             // break/place event. Reset the growth clock so pending catch-up isn't
             // re-applied to the replant, and skip catch-up this tick.
-            if (CropCatchUp.handleInPlaceHarvest(level, pos, cropState, ((CropBlock) (Object) this).getAge(state))) {
+            if (CropCatchUp.handleInPlaceHarvest(level, pos, cropState, state)) {
                 CropRegistry.put(level, pos, cropState);
                 return;
             }

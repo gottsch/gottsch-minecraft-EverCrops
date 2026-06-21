@@ -19,6 +19,8 @@ package mod.gottsch.forge.evercrops.core.persistence;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
 
 /**
  * Shared timing/threshold logic used by the single-AGE-property catch-up mixins
@@ -100,13 +102,32 @@ public final class CropCatchUp {
      * reliable in-place-harvest signal. We record the current age on every tick and, on a
      * decrease, stamp the growth/call clocks to {@code now} so the reservoir is spent.
      *
-     * @param currentAge the block's current age/stage value this tick
+     * @param state the block state being random-ticked (its growth property is resolved internally)
      * @return true if a harvest reset was detected (caller should persist and skip catch-up this tick)
      */
+    public static boolean handleInPlaceHarvest(ServerLevel level, BlockPos pos, CropState cropState, BlockState state) {
+        IntegerProperty growth = CropEligibility.growthPropertyOf(state.getBlock());
+        int currentAge = (growth != null) ? state.getValue(growth) : -1;
+        return handleInPlaceHarvest(level, pos, cropState, currentAge);
+    }
+
+    /**
+     * Binary-compatibility overload for add-ons compiled against EverCrops 3.5.x (the
+     * {@code int} signature shipped in 3.5.3, e.g. EverCrops: Farmer's Delight 1.1.4),
+     * which pass a pre-resolved age. Retained so that 3.6.0 does not break those add-ons
+     * at runtime. New callers should use the {@link BlockState} overload, which resolves
+     * the growth property itself.
+     *
+     * @param currentAge the block's current age/stage value this tick ({@code -1} = none)
+     * @deprecated since 3.6.0 — prefer
+     *             {@link #handleInPlaceHarvest(ServerLevel, BlockPos, CropState, BlockState)}.
+     */
+    @Deprecated
     public static boolean handleInPlaceHarvest(ServerLevel level, BlockPos pos, CropState cropState, int currentAge) {
         int previousAge = cropState.getLastAge();
         cropState.setLastAge(currentAge);
-        if (previousAge >= 0 && currentAge < previousAge) {
+        // currentAge < 0 means no resolvable growth property (e.g. bamboo sapling) — never a regression.
+        if (previousAge >= 0 && currentAge >= 0 && currentAge < previousAge) {
             long now = level.getGameTime();
             int light = level.getRawBrightness(pos, 0);
             cropState.setLastGrowthGameTime(now)

@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.6.0] - 2026-06-21
+
+### Added
+
+- New **Modded Crops** setting (`moddedCropsEnabled`, on by default). EverCrops now recognizes a plant as a crop by how it behaves — a block that grows on its own through an age or stage — instead of relying only on a fixed built-in list. This setting controls whether such modded plants (that aren't one of the known vanilla types) are tracked.
+- New **Denylist** setting — a list of block ids to skip during detection, for the rare block that looks like a crop but isn't. Fire and frosted ice are excluded by default; add your own ids if a pack needs it.
+
+### Changed
+
+- Reworked internally how EverCrops decides which blocks to track: a single behavior check replaces the old hardcoded block lists. All existing vanilla crops behave exactly as before — this mainly tidies the internals and lays the groundwork for broader crop support.
+
+---
+
 ## [3.5.3] - 2026-06-20
 
 ### Fixed
