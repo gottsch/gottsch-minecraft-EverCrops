@@ -40,5 +40,7 @@ public class EverCrops {
         Config.register(modContainer);
         ModEvents.registerPredicates();
         modEventBus.addListener(CommonSetup::init);
+        modEventBus.addListener(Config::onConfigLoading);
+        modEventBus.addListener(Config::onConfigReloading);
     }
 }

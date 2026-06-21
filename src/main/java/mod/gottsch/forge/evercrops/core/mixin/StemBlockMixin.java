@@ -70,7 +70,7 @@ public abstract class StemBlockMixin extends BushBlock implements BonemealableBl
             CropState cropState = cropStateOptional.get();
             // Harvested in place (age dropped without a break/place event). Reset the
             // growth clock so pending catch-up isn't re-applied to the replant.
-            if (CropCatchUp.handleInPlaceHarvest(level, pos, cropState, state.getValue(StemBlock.AGE))) {
+            if (CropCatchUp.handleInPlaceHarvest(level, pos, cropState, state)) {
                 CropRegistry.put(level, pos, cropState);
                 return;
             }

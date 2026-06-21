@@ -67,7 +67,7 @@ public abstract class SweetBerryBushBlockMixin extends BushBlock implements Bone
         CropState cropState = existing.get();
         // Harvested in place (e.g. Harvest With Ease, vanilla berry harvest) — reset the
         // growth clock so pending catch-up isn't re-applied to the replant.
-        if (CropCatchUp.handleInPlaceHarvest(level, pos, cropState, state.getValue(SweetBerryBushBlock.AGE))) {
+        if (CropCatchUp.handleInPlaceHarvest(level, pos, cropState, state)) {
             CropRegistry.put(level, pos, cropState);
             return;
         }
