@@ -19,6 +19,7 @@ package mod.gottsch.forge.evercrops.core.mixin;
 
 import mod.gottsch.forge.evercrops.core.EverCrops;
 import mod.gottsch.forge.evercrops.core.config.Config;
+import mod.gottsch.forge.evercrops.core.persistence.CropCatchUp;
 import mod.gottsch.forge.evercrops.core.persistence.CropRegistry;
 import mod.gottsch.forge.evercrops.core.persistence.CropState;
 import net.minecraft.core.BlockPos;
@@ -67,6 +68,13 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
         Optional<CropState> cropStateOptional = CropRegistry.get(level, pos);
         if (cropStateOptional.isPresent()) {
             CropState cropState = cropStateOptional.get();
+            // Harvested in place (e.g. Harvest With Ease) — the age dropped without a
+            // break/place event. Reset the growth clock so pending catch-up isn't
+            // re-applied to the replant, and skip catch-up this tick.
+            if (CropCatchUp.handleInPlaceHarvest(level, pos, cropState, state)) {
+                CropRegistry.put(level, pos, cropState);
+                return;
+            }
             long delta = level.getGameTime() - cropState.getLastCallGameTime();
             EverCrops.LOGGER.debug("call delta -> {}", delta);
             if (delta > AVG_CALL_TICK_INTERVAL * 2) {

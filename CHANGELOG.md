@@ -1,9 +1,30 @@
-# Changelog for EverCrops 1.20.1
+# Changelog for EverCrops (Forge 1.20.1)
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
+
+## [3.6.0] - 2026-06-21
+
+### Added
+
+- New **Modded Crops** setting (`moddedCropsEnabled`, on by default). EverCrops now recognizes a plant as a crop by how it behaves — a block that grows on its own through an age or stage — instead of relying only on a fixed built-in list. This setting controls whether such modded plants (that aren't one of the known vanilla types) are tracked.
+- New **Denylist** setting — a list of block ids to skip during detection, for the rare block that looks like a crop but isn't. Fire and frosted ice are excluded by default; add your own ids if a pack needs it.
+
+### Changed
+
+- Reworked internally how EverCrops decides which blocks to track: a single behavior check replaces the old hardcoded block lists. All existing vanilla crops behave exactly as before — this mainly tidies the internals and lays the groundwork for broader crop support.
+
+---
+
+## [3.5.3] - 2026-06-20
+
+### Fixed
+
+- Fixed a compatibility issue with right-click harvesting mods such as Harvest With Ease. After you'd been away and a crop caught up on its missed growth, harvesting and replanting it could make it instantly grow back — sometimes several times — because the replanted crop was mistaken for the same fully-grown one. Harvesting now properly resets a crop's growth timer, so replanted crops grow back at the normal rate. (This also stops vanilla sweet berry bushes from instantly refilling right after you pick them.)
 
 ---
 
