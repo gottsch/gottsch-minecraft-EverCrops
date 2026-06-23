@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [3.6.0] - 2026-06-21
+## [3.6.0] - 2026-06-23
 
 ### Added
 
@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Reworked internally how EverCrops decides which blocks to track: a single behavior check replaces the old hardcoded block lists. All existing vanilla crops behave exactly as before — this mainly tidies the internals and lays the groundwork for broader crop support.
+
+### Fixed
+
+- Fixed a crash that could happen with torchflowers. A torchflower seed first grows into a small crop and then turns into the full torchflower plant. If you'd been away long enough for one to finish growing while you were gone, EverCrops could trip over the finished flower and crash the game. Torchflowers now finish growing cleanly, and a fully-grown one is no longer tracked once it's done.
 
 ---
 
