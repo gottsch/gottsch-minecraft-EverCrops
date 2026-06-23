@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [3.6.0] - 2026-06-21
+## [4.0.0] - 2026-06-23
+
+### Changed
+
+- Rebuilt the behind-the-scenes system that catches your plants up on the growth they missed while you were away. Every plant type — crops, melon and pumpkin stems, sugar cane, cactus, bamboo, kelp, vines, saplings, and chorus flowers — now runs through one shared, consistent growth engine instead of separate copies of the logic. Nothing changes about how fast or how much things grow; this is groundwork for upcoming features and makes EverCrops more reliable and easier to expand.
+
+---
+
+## [3.6.0] - 2026-06-23
 
 ### Added
 
@@ -17,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Reworked internally how EverCrops decides which blocks to track: a single behavior check replaces the old hardcoded block lists. All existing vanilla crops behave exactly as before — this mainly tidies the internals and lays the groundwork for broader crop support.
+
+### Fixed
+
+- Fixed a crash that could happen with torchflowers. A torchflower seed first grows into a small crop and then turns into the full torchflower plant. If you'd been away long enough for one to finish growing while you were gone, EverCrops could trip over the finished flower and crash the game. Torchflowers now finish growing cleanly, and a fully-grown one is no longer tracked once it's done.
 
 ---
 

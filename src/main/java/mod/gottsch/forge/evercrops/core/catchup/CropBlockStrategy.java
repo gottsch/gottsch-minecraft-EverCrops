@@ -16,6 +16,7 @@
  * along with EverCrops.  If not, see <http://www.gnu.org/licenses/lgpl>.
  */
 package mod.gottsch.forge.evercrops.core.catchup;
+import mod.gottsch.forge.evercrops.api.CatchUpStrategy;
 
 import mod.gottsch.forge.evercrops.core.persistence.CropEligibility;
 import net.minecraft.core.BlockPos;
@@ -55,6 +56,11 @@ public final class CropBlockStrategy implements CatchUpStrategy {
         BlockState current = state;
         boolean grew = false;
         for (int i = 0; i < steps; i++) {
+            // A prior step may have matured the crop into a successor block that lacks the age
+            // property — e.g. torchflower_crop -> minecraft:torchflower. Reading age would throw.
+            if (!current.hasProperty(ageProperty)) {
+                break;
+            }
             int age = current.getValue(ageProperty);
             if (age >= maxAge) {
                 break;

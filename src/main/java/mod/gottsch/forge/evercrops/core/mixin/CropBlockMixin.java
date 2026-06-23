@@ -22,7 +22,7 @@ import mod.gottsch.forge.evercrops.core.catchup.CropBlockStrategy;
 import mod.gottsch.forge.evercrops.core.persistence.CropCatchUp;
 import mod.gottsch.forge.evercrops.core.persistence.CropEligibility;
 import mod.gottsch.forge.evercrops.core.persistence.CropRegistry;
-import mod.gottsch.forge.evercrops.core.persistence.CropState;
+import mod.gottsch.forge.evercrops.api.CropState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
@@ -74,7 +74,13 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
 
         boolean grew = CatchUpEngine.run(level, pos, state, cropState,
                 AVG_GROWTH_TICK_INTERVAL, true, randomSource, CropBlockStrategy.INSTANCE);
-        CropRegistry.put(level, pos, cropState);
+        // Catch-up may have matured the crop into a successor block we no longer track
+        // (e.g. torchflower_crop -> minecraft:torchflower). Drop the stale entry instead of re-saving.
+        if (grew && !CropEligibility.isEligible(level.getBlockState(pos))) {
+            CropRegistry.remove(level, pos);
+        } else {
+            CropRegistry.put(level, pos, cropState);
+        }
         // Catch-up already advanced this crop this tick. Skip vanilla's own randomTick growth so it
         // can't overwrite the caught-up age with a lower one, nor double-write the growth timestamp.
         if (grew) {

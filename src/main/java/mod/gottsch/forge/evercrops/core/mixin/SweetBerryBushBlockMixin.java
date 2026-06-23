@@ -22,7 +22,7 @@ import mod.gottsch.forge.evercrops.core.catchup.IntegerPropertyAdvanceStrategy;
 import mod.gottsch.forge.evercrops.core.persistence.CropCatchUp;
 import mod.gottsch.forge.evercrops.core.persistence.CropEligibility;
 import mod.gottsch.forge.evercrops.core.persistence.CropRegistry;
-import mod.gottsch.forge.evercrops.core.persistence.CropState;
+import mod.gottsch.forge.evercrops.api.CropState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;

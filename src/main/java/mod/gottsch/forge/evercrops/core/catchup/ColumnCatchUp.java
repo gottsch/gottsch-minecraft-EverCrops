@@ -21,7 +21,7 @@ import mod.gottsch.forge.evercrops.core.config.Config;
 import mod.gottsch.forge.evercrops.core.mixin.IBambooStalkBlockMixin;
 import mod.gottsch.forge.evercrops.core.persistence.CropCatchUp;
 import mod.gottsch.forge.evercrops.core.persistence.CropRegistry;
-import mod.gottsch.forge.evercrops.core.persistence.CropState;
+import mod.gottsch.forge.evercrops.api.CropState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;

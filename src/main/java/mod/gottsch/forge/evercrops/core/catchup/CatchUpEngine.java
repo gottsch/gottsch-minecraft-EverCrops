@@ -17,21 +17,16 @@
  */
 package mod.gottsch.forge.evercrops.core.catchup;
 
-import mod.gottsch.forge.evercrops.core.persistence.CropCatchUp;
-import mod.gottsch.forge.evercrops.core.persistence.CropState;
+import mod.gottsch.forge.evercrops.api.CatchUpStrategy;
+import mod.gottsch.forge.evercrops.api.CropState;
+import mod.gottsch.forge.evercrops.api.EverCropsApi;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
- * Ties the catch-up decision ({@link CropCatchUp#beginCatchUp}) to a {@link CatchUpStrategy}: the
- * decision computes how many growth steps are owed (mutating the timing fields on {@code cropState}
- * as a side effect), then the strategy performs them.
- *
- * <p>The caller (a catch-up mixin) is responsible for persisting {@code cropState} via
- * {@code CropRegistry.put} regardless of the return value (the decision may have refreshed the call
- * clock even when no growth is owed) and for cancelling vanilla's own tick when this returns true.
+ * Internal convenience facade kept for the base mod's own mixins; delegates to {@link EverCropsApi#catchUp}.
  *
  * @author Mark Gottschling
  */
@@ -39,16 +34,9 @@ public final class CatchUpEngine {
 
     private CatchUpEngine() {}
 
-    /**
-     * @return true if catch-up actually grew the block this tick (caller should {@code ci.cancel()}).
-     */
     public static boolean run(ServerLevel level, BlockPos pos, BlockState state, CropState cropState,
                               int avgGrowthInterval, boolean requiresLight, RandomSource random,
                               CatchUpStrategy strategy) {
-        int steps = CropCatchUp.beginCatchUp(level, pos, cropState, avgGrowthInterval, requiresLight);
-        if (steps <= 0) {
-            return false;
-        }
-        return strategy.grow(level, pos, state, steps, random);
+        return EverCropsApi.catchUp(level, pos, state, cropState, avgGrowthInterval, requiresLight, random, strategy);
     }
 }

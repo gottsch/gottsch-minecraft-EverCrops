@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with EverCrops.  If not, see <http://www.gnu.org/licenses/lgpl>.
  */
-package mod.gottsch.forge.evercrops.core.persistence;
+package mod.gottsch.forge.evercrops.api;
 
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -28,11 +28,10 @@ import java.util.function.Predicate;
  * consulted by registry auto-cleanup.
  *
  * <p>The base mod and each add-on (e.g. EverCrops: Farmer's Delight) share a single
- * per-dimension {@link CropSavedData} registry keyed only by position — entries carry
- * no type tag. Cleanup therefore cannot tell a base-mod entry from an add-on entry, so
- * every mod that writes to the registry must contribute a predicate here. Cleanup keeps
- * an entry if <em>any</em> registered predicate matches; only entries that no module
- * recognises as a crop are removed.
+ * per-dimension registry keyed only by position — entries carry no type tag. Cleanup
+ * therefore cannot tell a base-mod entry from an add-on entry, so every mod that writes
+ * to the registry must contribute a predicate here. Cleanup keeps an entry if <em>any</em>
+ * registered predicate matches; only entries that no module recognises as a crop are removed.
  *
  * <p>Predicates are registered from each mod's {@code ModEvents} static initializer,
  * which the loader runs when it processes the {@code @EventBusSubscriber} class during

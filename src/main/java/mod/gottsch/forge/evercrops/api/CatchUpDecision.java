@@ -15,21 +15,16 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with EverCrops.  If not, see <http://www.gnu.org/licenses/lgpl>.
  */
-package mod.gottsch.forge.evercrops.core.catchup;
-
-import mod.gottsch.forge.evercrops.core.persistence.CropState;
+package mod.gottsch.forge.evercrops.api;
 
 /**
  * Pure catch-up timing logic — the "when / how many steps" brain, expressed over a plain
  * {@link CropState} POJO and primitives only (no {@code ServerLevel}/Minecraft types).
  *
- * <p>This is the loader-agnostic engine core (v4 §B / §C): {@code CropCatchUp} reads the live
- * world values ({@code now}, {@code light}, {@code isDay}) and delegates the decision here, so
- * the threshold/light-gate/harvest-guard math can be unit-tested with no world, no mocking and
- * no Minecraft bootstrap.
- *
- * <p>Behaviour is intentionally identical to the previous inline implementation in
- * {@code CropCatchUp} / the per-block mixins; this class only relocates that logic.
+ * <p>This is the loader-agnostic engine core: {@link EverCropsApi} reads the live world values
+ * ({@code now}, {@code light}, {@code isDay}) and delegates the decision here, so the
+ * threshold/light-gate/harvest-guard math can be unit-tested with no world, no mocking and no
+ * Minecraft bootstrap.
  *
  * @author Mark Gottschling
  */

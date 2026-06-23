@@ -15,9 +15,8 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with EverCrops.  If not, see <http://www.gnu.org/licenses/lgpl>.
  */
-package mod.gottsch.forge.evercrops.core.catchup;
+package mod.gottsch.forge.evercrops.api;
 
-import mod.gottsch.forge.evercrops.core.persistence.CropState;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

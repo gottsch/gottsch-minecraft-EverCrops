@@ -16,6 +16,7 @@
  * along with EverCrops.  If not, see <http://www.gnu.org/licenses/lgpl>.
  */
 package mod.gottsch.forge.evercrops.core.catchup;
+import mod.gottsch.forge.evercrops.api.CatchUpStrategy;
 
 import mod.gottsch.forge.evercrops.core.mixin.IStemBlockMixin;
 import net.minecraft.core.BlockPos;
