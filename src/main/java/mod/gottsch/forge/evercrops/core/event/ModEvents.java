@@ -21,6 +21,7 @@ import mod.gottsch.forge.evercrops.core.EverCrops;
 import mod.gottsch.forge.evercrops.core.config.Config;
 import mod.gottsch.forge.evercrops.core.persistence.CropBlockPredicates;
 import mod.gottsch.forge.evercrops.core.persistence.CropCatchUp;
+import mod.gottsch.forge.evercrops.core.persistence.CropEligibility;
 import mod.gottsch.forge.evercrops.core.persistence.CropRegistry;
 import mod.gottsch.forge.evercrops.core.persistence.CropState;
 import net.minecraft.core.BlockPos;
@@ -196,75 +197,23 @@ public class ModEvents {
     /**
      * Whether a block should be tracked by EverCrops, respecting the per-category
      * config toggles. Used by the place/break handlers.
-     * Mirrors the full set of block classes that have a randomTick mixin.
+     *
+     * <p>Delegates to {@link CropEligibility#isTrackingEnabled(BlockState)} — capability
+     * detection (random-ticking + a recognized growth property) gated by the category toggle.
      */
     public static boolean isTracked(BlockState state) {
-        Block block = state.getBlock();
-
-        if (Config.SERVER.cropsEnabled.get()) {
-            // CropBlock guard mirrors CropBlockMixin: skip blocks with no "age" property
-            if (block instanceof CropBlock
-                    && state.getProperties().stream().anyMatch(p -> p.getName().equals("age"))) return true;
-        }
-        if (Config.SERVER.stemCropsEnabled.get()) {
-            if (block instanceof StemBlock && state.hasProperty(StemBlock.AGE)) return true;
-        }
-        if (Config.SERVER.bushCropsEnabled.get()) {
-            if (block instanceof SweetBerryBushBlock && state.hasProperty(SweetBerryBushBlock.AGE)) return true;
-            if (block instanceof NetherWartBlock && state.hasProperty(NetherWartBlock.AGE)) return true;
-            if (block instanceof CocoaBlock && state.hasProperty(CocoaBlock.AGE)) return true;
-        }
-        if (Config.SERVER.columnCropsEnabled.get()) {
-            if (block instanceof SugarCaneBlock && state.hasProperty(SugarCaneBlock.AGE)) return true;
-            if (block instanceof CactusBlock && state.hasProperty(CactusBlock.AGE)) return true;
-            if (block instanceof KelpBlock && state.hasProperty(GrowingPlantHeadBlock.AGE)) return true;
-        }
-        if (Config.SERVER.saplingCropsEnabled.get()) {
-            if (block instanceof SaplingBlock && state.hasProperty(SaplingBlock.STAGE)) return true;
-        }
-        if (Config.SERVER.bambooEnabled.get()) {
-            if (block instanceof BambooStalkBlock && state.hasProperty(BambooStalkBlock.STAGE)) return true;
-            if (block instanceof BambooSaplingBlock) return true;
-        }
-        if (Config.SERVER.twistingVinesEnabled.get()) {
-            if (block instanceof TwistingVinesBlock && state.hasProperty(GrowingPlantHeadBlock.AGE)) return true;
-        }
-        if (Config.SERVER.weepingVinesEnabled.get()) {
-            if (block instanceof WeepingVinesBlock && state.hasProperty(GrowingPlantHeadBlock.AGE)) return true;
-        }
-        if (Config.SERVER.caveVinesEnabled.get()) {
-            if (block instanceof CaveVinesBlock && state.hasProperty(GrowingPlantHeadBlock.AGE)) return true;
-        }
-        if (Config.SERVER.chorusFlowerEnabled.get()) {
-            if (block instanceof ChorusFlowerBlock && state.hasProperty(ChorusFlowerBlock.AGE)) return true;
-        }
-        return false;
+        return CropEligibility.isTrackingEnabled(state);
     }
 
     /**
-     * Whether a block state is one of the crop types this mod tracks, independent of
-     * the per-category config toggles. Used by registry cleanup so that disabling a
-     * category does not cause its still-valid entries to be purged — cleanup only
-     * removes entries whose block is genuinely no longer a crop.
+     * Whether a block state is a tracked crop type, independent of the per-category config
+     * toggles. Used by registry cleanup so that disabling a category does not cause its
+     * still-valid entries to be purged — cleanup only removes entries whose block is
+     * genuinely no longer a crop.
+     *
+     * <p>Delegates to {@link CropEligibility#isEligible(BlockState)} (pure capability).
      */
     public static boolean isCropBlock(BlockState state) {
-        Block block = state.getBlock();
-        if (block instanceof CropBlock
-                && state.getProperties().stream().anyMatch(p -> p.getName().equals("age"))) return true;
-        if (block instanceof StemBlock && state.hasProperty(StemBlock.AGE)) return true;
-        if (block instanceof SweetBerryBushBlock && state.hasProperty(SweetBerryBushBlock.AGE)) return true;
-        if (block instanceof NetherWartBlock && state.hasProperty(NetherWartBlock.AGE)) return true;
-        if (block instanceof CocoaBlock && state.hasProperty(CocoaBlock.AGE)) return true;
-        if (block instanceof SugarCaneBlock && state.hasProperty(SugarCaneBlock.AGE)) return true;
-        if (block instanceof CactusBlock && state.hasProperty(CactusBlock.AGE)) return true;
-        if (block instanceof KelpBlock && state.hasProperty(GrowingPlantHeadBlock.AGE)) return true;
-        if (block instanceof SaplingBlock && state.hasProperty(SaplingBlock.STAGE)) return true;
-        if (block instanceof BambooStalkBlock && state.hasProperty(BambooStalkBlock.STAGE)) return true;
-        if (block instanceof BambooSaplingBlock) return true;
-        if (block instanceof TwistingVinesBlock && state.hasProperty(GrowingPlantHeadBlock.AGE)) return true;
-        if (block instanceof WeepingVinesBlock && state.hasProperty(GrowingPlantHeadBlock.AGE)) return true;
-        if (block instanceof CaveVinesBlock && state.hasProperty(GrowingPlantHeadBlock.AGE)) return true;
-        if (block instanceof ChorusFlowerBlock && state.hasProperty(ChorusFlowerBlock.AGE)) return true;
-        return false;
+        return CropEligibility.isEligible(state);
     }
 }
