@@ -17,6 +17,7 @@
  */
 package mod.gottsch.forge.evercrops.core.persistence;
 
+import mod.gottsch.forge.evercrops.core.catchup.CatchUpDecision;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
@@ -56,34 +57,8 @@ public final class CropCatchUp {
                                    int avgGrowthInterval, boolean requiresLight) {
         long now = level.getGameTime();
         int light = level.getRawBrightness(pos, 0);
-
-        long callDelta = now - cropState.getLastCallGameTime();
-        if (callDelta <= AVG_CALL_TICK_INTERVAL * 2L) {
-            cropState.setLastCallGameTime(now).setLastCallLightLevel(light);
-            return 0;
-        }
-
-        long growthDelta = now - cropState.getLastGrowthGameTime();
-        if (growthDelta <= avgGrowthInterval * 2L) {
-            return 0;
-        }
-
-        boolean grow = !requiresLight
-                || light >= 9
-                || (!level.isDay() && (cropState.getLastCallLightLevel() >= 9
-                                       || cropState.getLastGrowthLightLevel() >= 9));
-        if (!grow) {
-            cropState.setLastCallGameTime(now).setLastCallLightLevel(light);
-            return 0;
-        }
-
-        int quotient = (int) Math.floor((double) growthDelta / avgGrowthInterval);
-        long remainder = growthDelta % avgGrowthInterval;
-        cropState.setLastGrowthGameTime(now - remainder)
-                .setLastGrowthLightLevel(light)
-                .setLastCallGameTime(now)
-                .setLastCallLightLevel(light);
-        return quotient;
+        return CatchUpDecision.computeSteps(cropState, now, light, level.isDay(),
+                AVG_CALL_TICK_INTERVAL, avgGrowthInterval, requiresLight);
     }
 
     /**
@@ -124,19 +99,8 @@ public final class CropCatchUp {
      */
     @Deprecated
     public static boolean handleInPlaceHarvest(ServerLevel level, BlockPos pos, CropState cropState, int currentAge) {
-        int previousAge = cropState.getLastAge();
-        cropState.setLastAge(currentAge);
-        // currentAge < 0 means no resolvable growth property (e.g. bamboo sapling) — never a regression.
-        if (previousAge >= 0 && currentAge >= 0 && currentAge < previousAge) {
-            long now = level.getGameTime();
-            int light = level.getRawBrightness(pos, 0);
-            cropState.setLastGrowthGameTime(now)
-                    .setLastGrowthLightLevel(light)
-                    .setLastCallGameTime(now)
-                    .setLastCallLightLevel(light);
-            return true;
-        }
-        return false;
+        return CatchUpDecision.detectInPlaceHarvest(cropState,
+                level.getGameTime(), level.getRawBrightness(pos, 0), currentAge);
     }
 
     /** Build a fresh CropState stamped with the current game time and light level. */

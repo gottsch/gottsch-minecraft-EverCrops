@@ -80,6 +80,7 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
     mavenLocal()
+    mavenCentral()
     maven {
         name = "CurseMaven"
         url = "https://www.cursemaven.com"
@@ -97,6 +98,18 @@ dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     if (project.mixin.toBoolean()) annotationProcessor "org.spongepowered:mixin:${mixinVersion}:processor"
 
+    // Unit tests for the pure catch-up logic (CatchUpDecision). These intentionally avoid
+    // Minecraft types so they need no game bootstrap, no mocking and no GameTest structure.
+    testImplementation platform('org.junit:junit-bom:5.10.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
 }
 
 mixin {

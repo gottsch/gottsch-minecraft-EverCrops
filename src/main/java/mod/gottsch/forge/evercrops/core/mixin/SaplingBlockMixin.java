@@ -17,8 +17,8 @@
  */
 package mod.gottsch.forge.evercrops.core.mixin;
 
-import mod.gottsch.forge.evercrops.core.config.Config;
 import mod.gottsch.forge.evercrops.core.persistence.CropCatchUp;
+import mod.gottsch.forge.evercrops.core.persistence.CropEligibility;
 import mod.gottsch.forge.evercrops.core.persistence.CropRegistry;
 import mod.gottsch.forge.evercrops.core.persistence.CropState;
 import net.minecraft.core.BlockPos;
@@ -65,8 +65,7 @@ public abstract class SaplingBlockMixin extends BushBlock implements Bonemealabl
     @Inject(method = "randomTick", at = @At(value = "HEAD"), cancellable = true)
     public void everCrops_randomTick(BlockState state, ServerLevel level, BlockPos pos,
                                      RandomSource random, CallbackInfo ci) {
-        if (!Config.SERVER.saplingCropsEnabled.get()) return;
-        if (!state.hasProperty(SaplingBlock.STAGE)) return;
+        if (!CropEligibility.isTrackingEnabled(state)) return;
 
         Optional<CropState> existing = CropRegistry.get(level, pos);
         if (existing.isEmpty()) {

@@ -17,16 +17,18 @@
  */
 package mod.gottsch.forge.evercrops.core.mixin;
 
-import mod.gottsch.forge.evercrops.core.config.Config;
+import mod.gottsch.forge.evercrops.core.catchup.CatchUpEngine;
+import mod.gottsch.forge.evercrops.core.catchup.StemBlockStrategy;
 import mod.gottsch.forge.evercrops.core.persistence.CropCatchUp;
+import mod.gottsch.forge.evercrops.core.persistence.CropEligibility;
 import mod.gottsch.forge.evercrops.core.persistence.CropRegistry;
 import mod.gottsch.forge.evercrops.core.persistence.CropState;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.BonemealableBlock;
+import net.minecraft.world.level.block.BushBlock;
+import net.minecraft.world.level.block.StemBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -37,16 +39,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Optional;
 
 /**
- * Almost identical to CropBlockMixin, but targets StemBlock which extends
- * BushBlock rather than CropBlock, and handles fruit spreading at age 7.
+ * Catch-up growth for {@link StemBlock} (melon / pumpkin stems). The growth action — advance AGE,
+ * then spread one fruit at maturity — lives in {@link StemBlockStrategy}.
  *
  * @author by Mark Gottschling on 3/19/2025
  */
 @Mixin(StemBlock.class)
 public abstract class StemBlockMixin extends BushBlock implements BonemealableBlock, IStemBlockMixin {
 
-    @Unique
-    private static final int AVG_CALL_TICK_INTERVAL = 1350;
     @Unique
     private static final int AVG_GROWTH_TICK_INTERVAL = 7000;
 
@@ -56,120 +56,41 @@ public abstract class StemBlockMixin extends BushBlock implements BonemealableBl
 
     @Inject(method = "randomTick", at = @At(value = "HEAD"), cancellable = true)
     public void everCrops_randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource randomSource, CallbackInfo ci) {
-        if (!Config.SERVER.stemCropsEnabled.get()) return;
-        // Guard against mods that extend StemBlock but use block states that don't have
-        // the AGE property (e.g. decorative stem-like blocks).
-        if (!state.hasProperty(StemBlock.AGE)) {
+        if (!CropEligibility.isTrackingEnabled(state)) return;
+
+        Optional<CropState> existing = CropRegistry.get(level, pos);
+        if (existing.isEmpty()) {
+            CropRegistry.put(level, pos, CropCatchUp.createState(level, pos));
+            return;
+        }
+        CropState cropState = existing.get();
+        // Harvested in place (age dropped without a break/place event). Reset the growth clock so
+        // pending catch-up isn't re-applied to the replant.
+        if (CropCatchUp.handleInPlaceHarvest(level, pos, cropState, state)) {
+            CropRegistry.put(level, pos, cropState);
             return;
         }
 
-        Optional<CropState> cropStateOptional = CropRegistry.get(level, pos);
-        if (cropStateOptional.isPresent()) {
-            CropState cropState = cropStateOptional.get();
-            // Harvested in place (age dropped without a break/place event). Reset the
-            // growth clock so pending catch-up isn't re-applied to the replant.
-            if (CropCatchUp.handleInPlaceHarvest(level, pos, cropState, state)) {
-                CropRegistry.put(level, pos, cropState);
-                return;
-            }
-            long delta = level.getGameTime() - cropState.getLastCallGameTime();
-            if (delta > AVG_CALL_TICK_INTERVAL * 2) {
-                long growthDelta = level.getGameTime() - cropState.getLastGrowthGameTime();
-                if (growthDelta > AVG_GROWTH_TICK_INTERVAL * 2) {
-                    boolean grow = false;
-
-                    if (level.getRawBrightness(pos, 0) >= 9) {
-                        grow = true;
-                    } else if (!level.isDay()) {
-                        if (cropState.getLastCallLightLevel() >= 9) {
-                            grow = true;
-                        } else if (cropState.getLastGrowthLightLevel() >= 9) {
-                            grow = true;
-                        }
-                    }
-
-                    if (grow) {
-                        BlockState currentState = state;
-                        int quotient = (int) (Math.floor((double) growthDelta / AVG_GROWTH_TICK_INTERVAL));
-                        long remainder = growthDelta % AVG_GROWTH_TICK_INTERVAL;
-                        boolean grewAny = false;
-                        for (int i = 0; i < quotient; i++) {
-                            // Another mod (land claim/protection, etc.) vetoed growth.
-                            if (!net.minecraftforge.common.ForgeHooks.onCropsGrowPre(level, pos, currentState, true)) {
-                                break;
-                            }
-                            int age = currentState.getValue(StemBlock.AGE);
-                            if (age < 7) {
-                                currentState = currentState.setValue(StemBlock.AGE, age + 1);
-                                level.setBlock(pos, currentState, 3);
-                                net.minecraftforge.common.ForgeHooks.onCropsGrowPost(level, pos, currentState);
-                                grewAny = true;
-                            } else {
-                                // Mature stem: attempt to spread fruit once, then stop.
-                                // A stem yields at most one fruit (it converts to an
-                                // attached stem), so catch-up must not spawn several.
-                                IStemBlockMixin stemBlock = (IStemBlockMixin) (Object) this;
-                                Direction direction = Direction.Plane.HORIZONTAL.getRandomDirection(randomSource);
-                                BlockPos blockpos = pos.relative(direction);
-                                BlockState blockstate = level.getBlockState(blockpos.below());
-                                if (level.isEmptyBlock(blockpos) && (blockstate.canSustainPlant(level, blockpos.below(), Direction.UP, stemBlock.getFruit()) || blockstate.is(Blocks.FARMLAND) || blockstate.is(BlockTags.DIRT))) {
-                                    level.setBlockAndUpdate(blockpos, stemBlock.getFruit().defaultBlockState());
-                                    level.setBlockAndUpdate(pos, stemBlock.getFruit().getAttachedStem().defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, direction));
-                                    net.minecraftforge.common.ForgeHooks.onCropsGrowPost(level, pos, currentState);
-                                    grewAny = true;
-                                }
-                                break;
-                            }
-                        }
-                        cropState.setLastGrowthGameTime(level.getGameTime() - remainder);
-                        cropState.setLastGrowthLightLevel(level.getRawBrightness(pos, 0));
-                        cropState.setLastCallGameTime(level.getGameTime());
-                        cropState.setLastCallLightLevel(level.getRawBrightness(pos, 0));
-                        // Catch-up already advanced this stem this tick. Skip vanilla's own
-                        // randomTick growth so it can't overwrite the caught-up age, spread a
-                        // second fruit, nor double-write the growth timestamp via the
-                        // setBlock inject below.
-                        if (grewAny) {
-                            ci.cancel();
-                        }
-                    } else {
-                        cropState.setLastCallGameTime(level.getGameTime());
-                        cropState.setLastCallLightLevel(level.getRawBrightness(pos, 0));
-                    }
-                }
-            } else {
-                cropState.setLastCallGameTime(level.getGameTime());
-                cropState.setLastCallLightLevel(level.getRawBrightness(pos, 0));
-            }
-            CropRegistry.put(level, pos, cropState);
-        } else {
-            CropRegistry.put(level, pos, everCrops$createCropState(level, pos));
+        boolean grew = CatchUpEngine.run(level, pos, state, cropState,
+                AVG_GROWTH_TICK_INTERVAL, true, randomSource, StemBlockStrategy.INSTANCE);
+        CropRegistry.put(level, pos, cropState);
+        // Catch-up already advanced this stem this tick. Skip vanilla's own randomTick growth so it
+        // can't overwrite the caught-up age, spread a second fruit, nor double-write the timestamp.
+        if (grew) {
+            ci.cancel();
         }
     }
 
     @Inject(method = "randomTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ServerLevel;setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;I)Z"))
     public void everCrops_randomTick_setBlock(BlockState state, ServerLevel level, BlockPos pos, RandomSource randomSource, CallbackInfo ci) {
-        if (!Config.SERVER.stemCropsEnabled.get()) return;
-        if (!state.hasProperty(StemBlock.AGE)) {
-            return;
-        }
+        if (!CropEligibility.isTrackingEnabled(state)) return;
         Optional<CropState> cropState = CropRegistry.get(level, pos);
         if (cropState.isPresent()) {
             cropState.get().setLastGrowthGameTime(level.getGameTime())
                     .setLastGrowthLightLevel(level.getRawBrightness(pos, 0));
             CropRegistry.put(level, pos, cropState.get());
         } else {
-            CropRegistry.put(level, pos, everCrops$createCropState(level, pos));
+            CropRegistry.put(level, pos, CropCatchUp.createState(level, pos));
         }
-    }
-
-    @Unique
-    private CropState everCrops$createCropState(ServerLevel level, BlockPos pos) {
-        CropState cropState = new CropState();
-        cropState.setLastCallGameTime(level.getGameTime())
-                .setLastGrowthGameTime(level.getGameTime())
-                .setLastCallLightLevel(level.getRawBrightness(pos, 0))
-                .setLastGrowthLightLevel(level.getRawBrightness(pos, 0));
-        return cropState;
     }
 }
