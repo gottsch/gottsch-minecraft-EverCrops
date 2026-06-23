@@ -6,6 +6,7 @@
   "mixins": [
     "BambooSaplingBlockMixin",
     "BambooStalkBlockMixin",
+    "BlockMixin",
     "CactusBlockMixin",
     "CaveVinesBlockMixin",
     "ChorusFlowerBlockMixin",

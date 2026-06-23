@@ -17,11 +17,10 @@
  */
 package mod.gottsch.forge.evercrops.core.mixin;
 
+import mod.gottsch.forge.evercrops.core.catchup.ColumnCatchUp;
 import mod.gottsch.forge.evercrops.core.config.Config;
-import mod.gottsch.forge.evercrops.core.persistence.CropCatchUp;
-import mod.gottsch.forge.evercrops.core.persistence.CropRegistry;
-import mod.gottsch.forge.evercrops.core.persistence.CropState;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Block;
@@ -30,24 +29,18 @@ import net.minecraft.world.level.block.GrowingPlantHeadBlock;
 import net.minecraft.world.level.block.KelpBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.common.CommonHooks;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Optional;
-
 /**
- * Catch-up growth for kelp. Targets GrowingPlantHeadBlock (kelp's randomTick
- * is inherited from there, not overridden in KelpBlock). Guards with instanceof
- * to avoid affecting other GrowingPlantHeadBlock subclasses (vines, etc.).
+ * Catch-up growth for kelp. Targets GrowingPlantHeadBlock (kelp's randomTick is inherited from there,
+ * not overridden in KelpBlock). Guards with instanceof to avoid affecting other subclasses (vines).
  *
- * Vanilla growth: AGE 0-25, each tick places a new KelpBlock above (cycling
- * AGE by 1) and converts the old head to KelpPlantBlock via updateShape.
- * Growth stops when AGE reaches 25. No light requirement (underwater).
- * Gate: random.nextDouble() < 0.14 per tick — AVG_GROWTH_TICK_INTERVAL ~9800.
+ * <p>Grows upward into water; AGE 0-25; no light requirement. The head-walking, relocation and
+ * cancel logic is shared with the nether/cave vines in {@link ColumnCatchUp}.
  *
  * @author Mark Gottschling on 4/27/2026
  */
@@ -63,73 +56,18 @@ public abstract class KelpBlockMixin extends Block {
 
     @Inject(method = "randomTick", at = @At(value = "HEAD"), cancellable = true)
     public void everCrops_randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random, CallbackInfo ci) {
-        if (!(((Object)this) instanceof KelpBlock)) return;
+        if (!(((Object) this) instanceof KelpBlock)) return;
         if (!Config.SERVER.columnCropsEnabled.get()) return;
         if (!state.hasProperty(GrowingPlantHeadBlock.AGE)) return;
 
-        Optional<CropState> existing = CropRegistry.get(level, pos);
-        if (existing.isEmpty()) {
-            // Wild (worldgen) heads are tracked only when the player opts in. Placed ones are
-            // registered via the place event, and tracking follows the head via TAIL relocation.
-            if (Config.SERVER.trackWildVines.get()) {
-                CropRegistry.put(level, pos, CropCatchUp.createState(level, pos));
-            }
-            return;
-        }
-        CropState cropState = existing.get();
-        int steps = CropCatchUp.beginCatchUp(level, pos, cropState, AVG_GROWTH_TICK_INTERVAL, false);
-        if (steps > 0) {
-            BlockPos currentPos = pos;
-            BlockState currentState = state;
-            // max meaningful steps bounded by remaining age (25 - current age); cap at 50
-            int limit = Math.min(steps, 50);
-            for (int i = 0; i < limit; i++) {
-                int age = currentState.getValue(GrowingPlantHeadBlock.AGE);
-                if (age >= 25) break; // kelp stops growing at max age
-                BlockPos above = currentPos.above();
-                // kelp grows only into water source blocks
-                if (!level.getBlockState(above).is(Blocks.WATER)) break;
-                if (!CommonHooks.canCropGrow(level, above, currentState, true)) break;
-                // cycle(AGE) increments age by 1 (0→1, 24→25, 25→0 — but we break at 25)
-                BlockState newHead = currentState.cycle(GrowingPlantHeadBlock.AGE);
-                level.setBlockAndUpdate(above, newHead);
-                // updateShape on currentPos converts it from KelpBlock to KelpPlantBlock
-                CommonHooks.fireCropGrowPost(level, above, level.getBlockState(above));
-                currentPos = above;
-                currentState = newHead;
-            }
-            if (!currentPos.equals(pos)) {
-                // Catch-up moved the head: relocate the entry and cancel vanilla so it can't
-                // grow one more step and orphan the entry we just relocated.
-                CropRegistry.remove(level, pos);
-                CropRegistry.put(level, currentPos, cropState);
-                ci.cancel();
-            } else {
-                CropRegistry.put(level, pos, cropState);
-            }
-        } else {
-            CropRegistry.put(level, pos, cropState);
-        }
+        ColumnCatchUp.headCatchUp(level, pos, state, AVG_GROWTH_TICK_INTERVAL, Direction.UP,
+                (lvl, next) -> lvl.getBlockState(next).is(Blocks.WATER), ci); // kelp grows only into water
     }
 
-    /**
-     * After vanilla grows the head one block (the common online case), the head has moved up
-     * and {@code pos} is now a KelpPlantBlock. Relocate the tracking entry to the new head so
-     * it follows the plant instead of being orphaned (which would leave a stale entry behind
-     * every growth step). Removes the entry if the head is gone entirely.
-     */
     @Inject(method = "randomTick", at = @At("TAIL"))
     public void everCrops_randomTick_relocate(BlockState state, ServerLevel level, BlockPos pos, RandomSource random, CallbackInfo ci) {
-        if (!(((Object)this) instanceof KelpBlock)) return;
+        if (!(((Object) this) instanceof KelpBlock)) return;
         if (!Config.SERVER.columnCropsEnabled.get()) return;
-        Optional<CropState> entry = CropRegistry.get(level, pos);
-        if (entry.isEmpty()) return;
-        if (level.getBlockState(pos).is((Block)(Object) this)) return; // head still here
-        CropRegistry.remove(level, pos);
-        BlockPos newHead = pos.above(); // kelp grows up
-        if (level.getBlockState(newHead).is((Block)(Object) this)) {
-            CropRegistry.put(level, newHead, entry.get());
-        }
+        ColumnCatchUp.headRelocate(level, pos, (Block) (Object) this, Direction.UP);
     }
-
 }

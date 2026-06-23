@@ -17,7 +17,9 @@
  */
 package mod.gottsch.forge.evercrops.core.persistence;
 
-import mod.gottsch.forge.evercrops.core.config.Config;
+import mod.gottsch.forge.evercrops.api.EverCropsApi;
+import mod.gottsch.forge.evercrops.api.EverCropsConfigView;
+import mod.gottsch.forge.evercrops.api.GrowthProperties;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.BambooSaplingBlock;
@@ -38,45 +40,26 @@ import net.minecraft.world.level.block.TwistingVinesBlock;
 import net.minecraft.world.level.block.WeepingVinesBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
-import net.minecraft.world.level.block.state.properties.Property;
 
 import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Capability-based crop eligibility (v4 §A, shipped in 3.6.0).
- *
- * <p>Single source of truth for "is this block a catch-up growable?", replacing the
- * triplicated {@code instanceof} lists previously spread across {@code ModEvents.isTracked},
- * {@code ModEvents.isCropBlock}, and the per-mixin {@code state.hasProperty(...)} guards.
- *
- * <p>A block is <b>eligible</b> (capability, config-independent) when, at runtime, all hold:
- * <ol>
- *   <li>{@code state.isRandomlyTicking()} is true; and</li>
- *   <li>it exposes a recognized growth {@link IntegerProperty} (name in {@link #GROWTH_PROPERTY_NAMES}),
- *       <i>or</i> it is a property-less transitional growable on the supplemental allowlist
- *       (currently only {@link BambooSaplingBlock}); and</li>
- *   <li>it is not on the denylist of structural false-positives (e.g. fire, frosted ice).</li>
- * </ol>
+ * Capability-based crop eligibility (v4 §A, shipped in 3.6.0). The capability detection itself —
+ * resolving a block's growth {@link IntegerProperty} — now lives in {@link GrowthProperties} (public
+ * API); this class layers the host-only concerns on top: the config-toggle category routing (read
+ * through {@link EverCropsApi#config()}, not {@code Config} directly) and the structural denylist.
  *
  * <p><b>Eligibility vs. tracking.</b> {@link #isEligible(BlockState)} is pure capability and is
- * what registry cleanup uses (config-independent, mirrors the old {@code isCropBlock}).
- * {@link #isTrackingEnabled(BlockState)} layers the per-category config toggles on top and is
- * what the place/break handlers use (mirrors the old {@code isTracked}).
+ * what registry cleanup uses (config-independent). {@link #isTrackingEnabled(BlockState)} layers the
+ * per-category config toggles on top and is what the place/break handlers use.
  *
  * @author Mark Gottschling on 2026-06-20
  */
 public final class CropEligibility {
 
-    /** Property names treated as a growth axis. Kept constant for 3.6.0; becomes API-extensible in v4. */
-    public static final Set<String> GROWTH_PROPERTY_NAMES = Set.of("age", "stage", "colony_age");
-
-    /** Preference order when a block exposes more than one allowlisted growth property. */
-    private static final List<String> GROWTH_PROPERTY_PREFERENCE = List.of("age", "stage", "colony_age");
+    /** Property names treated as a growth axis. Now defined by the public API. */
+    public static final Set<String> GROWTH_PROPERTY_NAMES = GrowthProperties.GROWTH_PROPERTY_NAMES;
 
     /** Default denylist: blocks with an {@code age} property that is not a growth axis. */
     public static final Set<ResourceLocation> DEFAULT_DENYLIST = Set.of(
@@ -84,9 +67,6 @@ public final class CropEligibility {
             ResourceLocation.withDefaultNamespace("soul_fire"),
             ResourceLocation.withDefaultNamespace("frosted_ice")
     );
-
-    /** Per-Block resolved growth property cache (Optional.empty() = resolved, none found). */
-    private static final Map<Block, Optional<IntegerProperty>> GROWTH_PROPERTY_CACHE = new ConcurrentHashMap<>();
 
     /** Active denylist; replaced from config at load via {@link #setDenylist(Set)}. */
     private static volatile Set<ResourceLocation> denylist = DEFAULT_DENYLIST;
@@ -102,7 +82,7 @@ public final class CropEligibility {
 
     /**
      * True if this block state is a catch-up growable by capability, ignoring config toggles.
-     * Mirrors the old {@code ModEvents.isCropBlock}; used by registry cleanup retention.
+     * Used by registry cleanup retention.
      */
     public static boolean isEligible(BlockState state) {
         Block block = state.getBlock();
@@ -117,29 +97,10 @@ public final class CropEligibility {
 
     /**
      * Resolve the growth {@link IntegerProperty} for a block (cached), or {@code null} if it has none
-     * recognized. Property-less growables (bamboo sapling) return {@code null} here and are handled by
-     * {@link #isSupplementalEligible(Block)}.
+     * recognized. Delegates to the public {@link GrowthProperties}.
      */
     public static IntegerProperty growthPropertyOf(Block block) {
-        return GROWTH_PROPERTY_CACHE.computeIfAbsent(block, CropEligibility::resolveGrowthProperty).orElse(null);
-    }
-
-    private static Optional<IntegerProperty> resolveGrowthProperty(Block block) {
-        // Collect allowlisted IntegerProperty matches by name, then pick by preference order.
-        Map<String, IntegerProperty> byName = new java.util.HashMap<>();
-        for (Property<?> property : block.getStateDefinition().getProperties()) {
-            if (property instanceof IntegerProperty intProperty
-                    && GROWTH_PROPERTY_NAMES.contains(property.getName())) {
-                byName.putIfAbsent(property.getName(), intProperty);
-            }
-        }
-        for (String name : GROWTH_PROPERTY_PREFERENCE) {
-            IntegerProperty match = byName.get(name);
-            if (match != null) {
-                return Optional.of(match);
-            }
-        }
-        return Optional.empty();
+        return GrowthProperties.growthPropertyOf(block);
     }
 
     /**
@@ -164,7 +125,7 @@ public final class CropEligibility {
 
     /**
      * True if this block state should be tracked given the user's config toggles.
-     * Mirrors the old {@code ModEvents.isTracked}; used by the place/break handlers.
+     * Used by the place/break handlers.
      */
     public static boolean isTrackingEnabled(BlockState state) {
         return isEligible(state) && isCategoryEnabled(categoryOf(state));
@@ -194,18 +155,19 @@ public final class CropEligibility {
     }
 
     private static boolean isCategoryEnabled(Category category) {
+        EverCropsConfigView config = EverCropsApi.config();
         return switch (category) {
-            case CROPS    -> Config.SERVER.cropsEnabled.get();
-            case STEM     -> Config.SERVER.stemCropsEnabled.get();
-            case BUSH     -> Config.SERVER.bushCropsEnabled.get();
-            case COLUMN   -> Config.SERVER.columnCropsEnabled.get();
-            case SAPLING  -> Config.SERVER.saplingCropsEnabled.get();
-            case BAMBOO   -> Config.SERVER.bambooEnabled.get();
-            case TWISTING -> Config.SERVER.twistingVinesEnabled.get();
-            case WEEPING  -> Config.SERVER.weepingVinesEnabled.get();
-            case CAVE     -> Config.SERVER.caveVinesEnabled.get();
-            case CHORUS   -> Config.SERVER.chorusFlowerEnabled.get();
-            case OTHER    -> Config.SERVER.moddedCropsEnabled.get();
+            case CROPS    -> config.cropsEnabled();
+            case STEM     -> config.stemCropsEnabled();
+            case BUSH     -> config.bushCropsEnabled();
+            case COLUMN   -> config.columnCropsEnabled();
+            case SAPLING  -> config.saplingCropsEnabled();
+            case BAMBOO   -> config.bambooEnabled();
+            case TWISTING -> config.twistingVinesEnabled();
+            case WEEPING  -> config.weepingVinesEnabled();
+            case CAVE     -> config.caveVinesEnabled();
+            case CHORUS   -> config.chorusFlowerEnabled();
+            case OTHER    -> config.moddedCropsEnabled();
         };
     }
 

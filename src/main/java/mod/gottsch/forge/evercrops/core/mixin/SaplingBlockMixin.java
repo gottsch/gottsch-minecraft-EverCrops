@@ -17,10 +17,10 @@
  */
 package mod.gottsch.forge.evercrops.core.mixin;
 
-import mod.gottsch.forge.evercrops.core.config.Config;
 import mod.gottsch.forge.evercrops.core.persistence.CropCatchUp;
+import mod.gottsch.forge.evercrops.core.persistence.CropEligibility;
 import mod.gottsch.forge.evercrops.core.persistence.CropRegistry;
-import mod.gottsch.forge.evercrops.core.persistence.CropState;
+import mod.gottsch.forge.evercrops.api.CropState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
@@ -44,7 +44,7 @@ import java.util.Optional;
  * random.nextInt(7) == 0 and light level >= 9 on the block above the sapling.
  *
  * Key differences from AGE-based crops:
- * - Light check: getMaxLocalRawBrightness(pos.above()) >= 9 (not getRawBrightness(pos, 0))
+ * - Light check: getMaxLocalRawBrightness(pos.above()) >= 9 (sky+block light on block above)
  * - advanceTree() is public on SaplingBlock — called directly for stage 1 → tree
  * - After a successful tree grow the sapling block is consumed; CropRegistry must
  *   be cleaned up immediately and vanilla's randomTick cancelled so it cannot
@@ -65,8 +65,7 @@ public abstract class SaplingBlockMixin extends BushBlock implements Bonemealabl
     @Inject(method = "randomTick", at = @At(value = "HEAD"), cancellable = true)
     public void everCrops_randomTick(BlockState state, ServerLevel level, BlockPos pos,
                                      RandomSource random, CallbackInfo ci) {
-        if (!Config.SERVER.saplingCropsEnabled.get()) return;
-        if (!state.hasProperty(SaplingBlock.STAGE)) return;
+        if (!CropEligibility.isTrackingEnabled(state)) return;
 
         Optional<CropState> existing = CropRegistry.get(level, pos);
         if (existing.isEmpty()) {

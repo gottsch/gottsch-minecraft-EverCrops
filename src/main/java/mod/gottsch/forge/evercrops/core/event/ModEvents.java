@@ -19,11 +19,11 @@ package mod.gottsch.forge.evercrops.core.event;
 
 import mod.gottsch.forge.evercrops.core.EverCrops;
 import mod.gottsch.forge.evercrops.core.config.Config;
-import mod.gottsch.forge.evercrops.core.persistence.CropBlockPredicates;
+import mod.gottsch.forge.evercrops.api.CropBlockPredicates;
 import mod.gottsch.forge.evercrops.core.persistence.CropCatchUp;
 import mod.gottsch.forge.evercrops.core.persistence.CropEligibility;
 import mod.gottsch.forge.evercrops.core.persistence.CropRegistry;
-import mod.gottsch.forge.evercrops.core.persistence.CropState;
+import mod.gottsch.forge.evercrops.api.CropState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
