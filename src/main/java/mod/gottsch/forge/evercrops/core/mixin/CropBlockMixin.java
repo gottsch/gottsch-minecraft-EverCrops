@@ -68,10 +68,13 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
         Optional<CropState> cropStateOptional = CropRegistry.get(level, pos);
         if (cropStateOptional.isPresent()) {
             CropState cropState = cropStateOptional.get();
+            // Set if catch-up matures the crop into a successor block we don't track
+            // (e.g. torchflower_crop -> minecraft:torchflower); drop the entry instead of re-saving.
+            boolean maturedOut = false;
             // Harvested in place (e.g. Harvest With Ease) — the age dropped without a
             // break/place event. Reset the growth clock so pending catch-up isn't
             // re-applied to the replant, and skip catch-up this tick.
-            if (CropCatchUp.handleInPlaceHarvest(level, pos, cropState, ((CropBlock) (Object) this).getAge(state))) {
+            if (CropCatchUp.handleInPlaceHarvest(level, pos, cropState, state)) {
                 CropRegistry.put(level, pos, cropState);
                 return;
             }
@@ -101,6 +104,13 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
                         long remainder = growthDelta % AVG_GROWTH_TICK_INTERVAL;
                         boolean grewAny = false;
                         for (int i = 0; i < quotient; i++) {
+                            // A prior step may have matured the crop into a successor block that
+                            // lacks the age property — e.g. torchflower_crop -> minecraft:torchflower.
+                            // getAge() reads getAgeProperty() off the state and would throw, so stop.
+                            if (!currentState.hasProperty(this.getAgeProperty())) {
+                                maturedOut = true;
+                                break;
+                            }
                             int age = ((CropBlock) (Object) this).getAge(currentState);
                             // Fully grown: remaining steps are no-ops, stop here.
                             if (age >= ((CropBlock) (Object) this).getMaxAge()) {
@@ -136,7 +146,13 @@ public abstract class CropBlockMixin extends BushBlock implements BonemealableBl
                 cropState.setLastCallGameTime(level.getGameTime());
                 cropState.setLastCallLightLevel(level.getRawBrightness(pos, 0));
             }
-            CropRegistry.put(level, pos, cropState);
+            // Crop matured into a successor block (torchflower flower) — it is no longer a
+            // tracked growable, so drop its entry rather than leaving it to linger.
+            if (maturedOut) {
+                CropRegistry.remove(level, pos);
+            } else {
+                CropRegistry.put(level, pos, cropState);
+            }
         } else {
             CropRegistry.put(level, pos, everCrops$createCropState(level, pos));
         }
