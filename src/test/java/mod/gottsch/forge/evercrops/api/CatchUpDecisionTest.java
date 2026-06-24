@@ -172,4 +172,48 @@ class CatchUpDecisionTest {
         assertEquals(-1, s.getLastAge());
         assertEquals(NOW - 30_000, s.getLastGrowthGameTime(), "clocks untouched");
     }
+
+    // -------------------------------------------------
+    // computeStepsUnlit (Dynamic Trees / unlit growables)
+    // -------------------------------------------------
+
+    private static CatchUpState unlit(long lastCall, long lastGrowth) {
+        return new CatchUpState()
+                .setLastCallGameTime(lastCall)
+                .setLastGrowthGameTime(lastGrowth);
+    }
+
+    @Test
+    void unlit_recentCall_returnsZero_andRefreshesBOTHClocks() {
+        // The key difference from computeSteps: the loaded gate stamps lastGrowth too, so it
+        // can't drift stale and fire spurious catch-up during normal loaded play.
+        CatchUpState s = unlit(NOW - 100, NOW - 999_999);
+        int steps = CatchUpDecision.computeStepsUnlit(s, NOW, AVG_CALL, AVG_GROWTH);
+
+        assertEquals(0, steps);
+        assertEquals(NOW, s.getLastCallGameTime(), "call clock refreshed");
+        assertEquals(NOW, s.getLastGrowthGameTime(), "growth clock ALSO refreshed (unlit behaviour)");
+    }
+
+    @Test
+    void unlit_growthDeltaBelowThreshold_returnsZero_withoutTouchingClocks() {
+        // callDelta = 5000 (> 2700) but growthDelta = 10000 (<= 2*7000) -> between thresholds.
+        CatchUpState s = unlit(NOW - 5000, NOW - 10_000);
+        int steps = CatchUpDecision.computeStepsUnlit(s, NOW, AVG_CALL, AVG_GROWTH);
+
+        assertEquals(0, steps);
+        assertEquals(NOW - 5000, s.getLastCallGameTime(), "call clock untouched in this branch");
+        assertEquals(NOW - 10_000, s.getLastGrowthGameTime(), "growth clock untouched");
+    }
+
+    @Test
+    void unlit_offline_computesQuotientAndRemainder_noLightGate() {
+        // growthDelta = 30000, avg = 7000 -> 4 steps (28000), remainder 2000. No light gate at all.
+        CatchUpState s = unlit(NOW - 5000, NOW - 30_000);
+        int steps = CatchUpDecision.computeStepsUnlit(s, NOW, AVG_CALL, AVG_GROWTH);
+
+        assertEquals(4, steps);
+        assertEquals(NOW - 2000, s.getLastGrowthGameTime(), "growth clock set to now - remainder");
+        assertEquals(NOW, s.getLastCallGameTime());
+    }
 }

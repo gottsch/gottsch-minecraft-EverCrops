@@ -100,4 +100,42 @@ public final class CatchUpDecision {
         }
         return false;
     }
+
+    /**
+     * Catch-up step count for an <i>unlit</i> growable that runs its own growth pass and so does
+     * not separately stamp {@code lastGrowthGameTime} during loaded play (e.g. Dynamic Trees soil
+     * blocks). Operates on the two base {@link CatchUpState} timestamps only — no light gate.
+     *
+     * <p>Differs from {@link #computeSteps} in the loaded gate: when the chunk was never really
+     * unloaded (callDelta within 2&times; the call interval) BOTH timestamps are refreshed, so
+     * {@code lastGrowthGameTime} cannot drift stale and fire spurious catch-up during normal play
+     * (the crop path keeps {@code lastGrowthGameTime} fresh via its own per-growth hook instead).
+     *
+     * @param state             tracked state (mutated in place)
+     * @param now               current game time (ticks)
+     * @param avgCallInterval   average ticks between random ticks for one block
+     * @param avgGrowthInterval average ticks between growth steps for this block
+     * @return number of growth steps to apply (0 if none this tick)
+     */
+    public static int computeStepsUnlit(CatchUpState state, long now,
+                                        int avgCallInterval, int avgGrowthInterval) {
+        long callDelta = now - state.getLastCallGameTime();
+        if (callDelta <= avgCallInterval * 2L) {
+            // Chunk was never really unloaded; keep BOTH timestamps current so growthDelta reflects
+            // only the actual offline period on the next reload, not accumulated loaded idle time.
+            state.setLastCallGameTime(now).setLastGrowthGameTime(now);
+            return 0;
+        }
+
+        long growthDelta = now - state.getLastGrowthGameTime();
+        if (growthDelta <= avgGrowthInterval * 2L) {
+            // Not enough time since last growth; leave timestamps untouched (between-threshold).
+            return 0;
+        }
+
+        int quotient = (int) Math.floor((double) growthDelta / avgGrowthInterval);
+        long remainder = growthDelta % avgGrowthInterval;
+        state.setLastGrowthGameTime(now - remainder).setLastCallGameTime(now);
+        return quotient;
+    }
 }
