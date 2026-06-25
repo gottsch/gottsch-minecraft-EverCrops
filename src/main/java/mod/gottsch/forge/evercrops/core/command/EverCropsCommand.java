@@ -20,7 +20,13 @@ package mod.gottsch.forge.evercrops.core.command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.LongArgumentType;
+import mod.gottsch.forge.evercrops.api.BeehiveState;
 import mod.gottsch.forge.evercrops.api.CropBlockPredicates;
+import mod.gottsch.forge.evercrops.api.EverCropsApi;
+import mod.gottsch.forge.evercrops.core.catchup.BeehiveCatchUp;
+import mod.gottsch.forge.evercrops.core.catchup.BeehiveDecision;
+import mod.gottsch.forge.evercrops.core.persistence.BeehiveRegistry;
+import mod.gottsch.forge.evercrops.core.persistence.BeehiveSavedData;
 import mod.gottsch.forge.evercrops.core.persistence.CropRegistry;
 import mod.gottsch.forge.evercrops.core.persistence.CropSavedData;
 import mod.gottsch.forge.evercrops.api.CropState;
@@ -33,6 +39,8 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.block.BeehiveBlock;
+import net.minecraft.world.level.block.entity.BeehiveBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 
@@ -113,12 +121,14 @@ public class EverCropsCommand {
      */
     private static int cleanup(CommandSourceStack source) {
         ServerLevel level = source.getLevel();
-        int removed = CropRegistry.cleanup(level, CropBlockPredicates::isCropBlock);
+        int removedCrops = CropRegistry.cleanup(level, CropBlockPredicates::isCropBlock);
+        int removedHives = BeehiveRegistry.cleanup(level, EverCropsCommand::isBeehive);
+        int removed = removedCrops + removedHives;
 
         if (removed > 0) {
             source.sendSuccess(() -> Component.literal(
-                    String.format("Removed %d stale crop entr%s from %s (block no longer a tracked crop in loaded chunks).",
-                            removed, removed == 1 ? "y" : "ies", level.dimension().location()))
+                    String.format("Removed %d stale entr%s from %s (%d crop, %d hive; block no longer tracked in loaded chunks).",
+                            removed, removed == 1 ? "y" : "ies", level.dimension().location(), removedCrops, removedHives))
                     .withStyle(ChatFormatting.GREEN), false);
         } else {
             source.sendSuccess(() -> Component.literal(
@@ -126,6 +136,11 @@ public class EverCropsCommand {
                     .withStyle(ChatFormatting.YELLOW), false);
         }
         return removed;
+    }
+
+    /** A block state is a beehive/bee-nest (both use {@link BeehiveBlock}) still worth tracking for honey catch-up. */
+    static boolean isBeehive(BlockState state) {
+        return state.getBlock() instanceof BeehiveBlock;
     }
 
     // ------------------------------------------------------------------
@@ -140,14 +155,15 @@ public class EverCropsCommand {
 
         CropSavedData data = CropSavedData.getOrCreate(level);
         int count = data.backdateInRadius(origin, radius, ticks);
+        int hiveCount = BeehiveSavedData.getOrCreate(level).backdateInRadius(origin, radius, ticks);
 
         double minutes = ticks / 1200.0;
         source.sendSuccess(() -> Component.literal(
-                String.format("Backdated %d crop entries by %d ticks (%.1f min) within %d blocks. " +
+                String.format("Backdated %d crop and %d hive entries by %d ticks (%.1f min) within %d blocks. " +
                               "Use '/evercrops tick <radius>' to apply growth immediately.",
-                        count, ticks, minutes, radius))
+                        count, hiveCount, ticks, minutes, radius))
                 .withStyle(ChatFormatting.GREEN), false);
-        return count;
+        return count + hiveCount;
     }
 
     // ------------------------------------------------------------------
@@ -176,12 +192,26 @@ public class EverCropsCommand {
             }
         }
 
+        // Beehives have no randomTick — drive their catch-up routine directly (same path the
+        // serverTick mixin uses), so backdated hives apply their owed honey right now.
+        int hivesTriggered = 0;
+        List<Long> hiveKeys = new ArrayList<>(BeehiveSavedData.getOrCreate(level).getKeys());
+        for (long packedPos : hiveKeys) {
+            BlockPos pos = BlockPos.of(packedPos);
+            if (pos.distSqr(origin) <= radiusSq && level.isLoaded(pos)
+                    && level.getBlockEntity(pos) instanceof BeehiveBlockEntity be) {
+                BeehiveCatchUp.onServerTick(level, pos, level.getBlockState(pos), be);
+                hivesTriggered++;
+            }
+        }
+
         final int result = triggered;
+        final int hiveResult = hivesTriggered;
         source.sendSuccess(() -> Component.literal(
-                String.format("Triggered randomTick for %d crop blocks within %d blocks of you.",
-                        result, radius))
+                String.format("Triggered catch-up for %d crop blocks and %d hives within %d blocks of you.",
+                        result, hiveResult, radius))
                 .withStyle(ChatFormatting.GREEN), false);
-        return triggered;
+        return triggered + hivesTriggered;
     }
 
     // ------------------------------------------------------------------
@@ -217,6 +247,12 @@ public class EverCropsCommand {
                 "  growth properties  : " + (growthProps.isEmpty() ? "(none)" : growthProps))
                 .withStyle(ChatFormatting.WHITE), false);
 
+        // Beehives track a different kind of state (honey level + learned production rate), in their
+        // own store — report that instead of the crop section.
+        if (blockState.getBlock() instanceof BeehiveBlock) {
+            return inspectBeehive(source, level, pos, blockState);
+        }
+
         if (opt.isEmpty()) {
             source.sendSuccess(() -> Component.literal(
                     "  tracked            : no — no CropState recorded (not registered for catch-up)")
@@ -250,6 +286,88 @@ public class EverCropsCommand {
                 + "  (approx — need callDelta>" + (AVG_CALL_TICK_INTERVAL * 2)
                 + " growthDelta>" + (AVG_GROWTH_TICK_INTERVAL * 2)
                 + "; per-crop interval varies, e.g. saplings need ~18900)")
+                .withStyle(wouldTrigger ? ChatFormatting.GREEN : ChatFormatting.GRAY), false);
+        return 1;
+    }
+
+    // ------------------------------------------------------------------
+    // /evercrops inspect — beehive branch
+    // ------------------------------------------------------------------
+
+    /**
+     * Beehive-specific inspect output: honey level, the learned vs. effective production interval,
+     * the bees/flower eligibility signals, and whether catch-up would currently fire.
+     */
+    private static int inspectBeehive(CommandSourceStack source, ServerLevel level, BlockPos pos, BlockState blockState) {
+        int honey = blockState.getValue(BeehiveBlock.HONEY_LEVEL);
+        source.sendSuccess(() -> Component.literal(
+                "  honey level        : " + honey + " / " + BeehiveBlock.MAX_HONEY_LEVELS)
+                .withStyle(ChatFormatting.WHITE), false);
+
+        Optional<BeehiveState> opt = BeehiveRegistry.get(level, pos);
+        if (opt.isEmpty()) {
+            source.sendSuccess(() -> Component.literal(
+                    "  tracked            : no — no BeehiveState recorded "
+                    + (EverCropsApi.config().beehivesEnabled() ? "(awaiting first tick)" : "(beehivesEnabled = false)"))
+                    .withStyle(ChatFormatting.YELLOW), false);
+            return 0;
+        }
+        BeehiveState state = opt.get();
+
+        // Eligibility signals come from the live block entity.
+        int occupants = -1;
+        boolean hasFlower = false;
+        boolean active = false;
+        if (level.getBlockEntity(pos) instanceof BeehiveBlockEntity be) {
+            occupants = be.getOccupantCount();
+            hasFlower = BeehiveCatchUp.hasValidFlower(level, be);
+            active = BeehiveCatchUp.isActive(level, be, state);
+        }
+
+        long now = level.getGameTime();
+        long callDelta = now - state.getLastCallGameTime();
+        long growthDelta = now - state.getLastGrowthGameTime();
+        long learned = state.getLearnedIntervalTicks();
+        int fallback = EverCropsApi.config().beehiveHoneyIntervalTicks();
+        int effective = BeehiveDecision.effectiveInterval(state, fallback, BeehiveCatchUp.DAYTIME_FRACTION);
+        // Offline credit is gated on the hive's producing-state as of its last loaded tick, not the
+        // instantaneous count — so predict with that, matching what the catch-up routine actually does.
+        boolean wouldTrigger = state.isLastActive()
+                && honey < BeehiveBlock.MAX_HONEY_LEVELS
+                && callDelta > BeehiveCatchUp.AVG_BE_CALL_INTERVAL * 2L
+                && growthDelta > effective * 2L;
+
+        final int occ = occupants;
+        final boolean flower = hasFlower;
+        final boolean act = active;
+        source.sendSuccess(() -> Component.literal(
+                "  lastCallGameTime   : " + state.getLastCallGameTime()
+                + "  (delta: " + callDelta + " ticks / " + String.format("%.1f", callDelta / 1200.0) + " min)")
+                .withStyle(ChatFormatting.WHITE), false);
+        source.sendSuccess(() -> Component.literal(
+                "  lastGrowthGameTime : " + state.getLastGrowthGameTime()
+                + "  (delta: " + growthDelta + " ticks / " + String.format("%.1f", growthDelta / 1200.0) + " min)")
+                .withStyle(ChatFormatting.WHITE), false);
+        source.sendSuccess(() -> Component.literal(
+                "  learned interval   : " + (learned > 0
+                        ? learned + " ticks/level (measured)"
+                        : "(not yet learned — using config fallback " + fallback + ")"))
+                .withStyle(ChatFormatting.WHITE), false);
+        source.sendSuccess(() -> Component.literal(
+                "  effective interval : " + effective + " ticks/level (after " + BeehiveCatchUp.DAYTIME_FRACTION + " daytime fraction)")
+                .withStyle(ChatFormatting.WHITE), false);
+        source.sendSuccess(() -> Component.literal(
+                "  bees / flower      : " + (occ < 0 ? "?" : occ) + " in hive, "
+                + (flower ? "living flower in range" : "no flower in range"))
+                .withStyle(ChatFormatting.WHITE), false);
+        source.sendSuccess(() -> Component.literal(
+                "  eligible (active)  : " + (act ? "YES" : "no — needs a living flower in range + bees (or a learned rate)"))
+                .withStyle(act ? ChatFormatting.GREEN : ChatFormatting.YELLOW), false);
+        source.sendSuccess(() -> Component.literal(
+                "  producing at unload: " + (state.isLastActive() ? "yes" : "no") + "  (gates offline credit)")
+                .withStyle(ChatFormatting.WHITE), false);
+        source.sendSuccess(() -> Component.literal(
+                "  offline growth?    : " + (wouldTrigger ? "YES" : "no"))
                 .withStyle(wouldTrigger ? ChatFormatting.GREEN : ChatFormatting.GRAY), false);
         return 1;
     }

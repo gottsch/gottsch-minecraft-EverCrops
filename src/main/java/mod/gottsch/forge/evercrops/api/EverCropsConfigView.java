@@ -50,6 +50,15 @@ public interface EverCropsConfigView {
 
     boolean chorusFlowerEnabled();
 
+    boolean beehivesEnabled();
+
+    /**
+     * Cold-start production rate for beehive catch-up: the assumed daytime ticks to gain one honey
+     * level, used until a hive has been observed producing honey while loaded (after which its own
+     * learned rate is used instead). See {@code BeehiveDecision}.
+     */
+    int beehiveHoneyIntervalTicks();
+
     boolean moddedCropsEnabled();
 
     boolean trackWildVines();

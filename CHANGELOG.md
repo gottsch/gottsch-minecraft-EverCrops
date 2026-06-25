@@ -5,7 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [4.0.0] - 2026-06-23
+## [4.0.0] - 2026-06-24
+
+### Added
+
+- 🐝 **Beehives and bee nests** now keep filling with honey while you're away. If a hive had bees and a flower nearby when you left, it keeps building up its honey level (up to full) based on how long you were gone — so you won't come back to a hive frozen exactly where you left it. Honey only builds during the daytime part of your time away (bees don't work at night or in the rain), and while you're nearby EverCrops quietly watches each hive to learn how fast it really produces, so the catch-up matches that hive's own pace rather than a one-size-fits-all guess. A hive with no bees, or no flowers in reach, won't gain honey while you're gone.
+- New **Beehives** setting (`beehivesEnabled`, on by default) to turn hive catch-up on or off, plus a setting to tune the starting fill speed used for a hive EverCrops hasn't watched produce yet (`beehiveHoneyIntervalTicks`).
+- `/evercrops inspect` on a beehive now shows its honey level, how fast it's filling, whether its bees and flower make it eligible, and whether it would catch up. `/evercrops simulate` and `/evercrops tick` now include hives too, so you can fast-forward and test honey catch-up just like crops. `/evercrops cleanup` also tidies leftover hive data.
 
 ### Changed
 

@@ -39,6 +39,8 @@ public final class EverCropsConfigViewImpl implements EverCropsConfigView {
     @Override public boolean weepingVinesEnabled() { return Config.SERVER.weepingVinesEnabled.get(); }
     @Override public boolean caveVinesEnabled()    { return Config.SERVER.caveVinesEnabled.get(); }
     @Override public boolean chorusFlowerEnabled() { return Config.SERVER.chorusFlowerEnabled.get(); }
+    @Override public boolean beehivesEnabled()     { return Config.SERVER.beehivesEnabled.get(); }
+    @Override public int beehiveHoneyIntervalTicks(){ return Config.SERVER.beehiveHoneyIntervalTicks.get(); }
     @Override public boolean moddedCropsEnabled()  { return Config.SERVER.moddedCropsEnabled.get(); }
     @Override public boolean trackWildVines()      { return Config.SERVER.trackWildVines.get(); }
     @Override public boolean autoCleanupEnabled()  { return Config.SERVER.autoCleanupEnabled.get(); }

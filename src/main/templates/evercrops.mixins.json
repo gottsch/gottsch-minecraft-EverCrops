@@ -6,6 +6,7 @@
   "mixins": [
     "BambooSaplingBlockMixin",
     "BambooStalkBlockMixin",
+    "BeehiveBlockEntityMixin",
     "BlockMixin",
     "CactusBlockMixin",
     "CaveVinesBlockMixin",
@@ -13,6 +14,7 @@
     "CocoaBlockMixin",
     "CropBlockMixin",
     "IBambooStalkBlockMixin",
+    "IBeehiveBlockEntityMixin",
     "IStemBlockMixin",
     "KelpBlockMixin",
     "NetherWartBlockMixin",
