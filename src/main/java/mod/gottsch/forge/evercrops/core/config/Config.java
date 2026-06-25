@@ -93,6 +93,8 @@ public final class Config {
         public final ForgeConfigSpec.BooleanValue weepingVinesEnabled;
         public final ForgeConfigSpec.BooleanValue caveVinesEnabled;
         public final ForgeConfigSpec.BooleanValue chorusFlowerEnabled;
+        public final ForgeConfigSpec.BooleanValue beehivesEnabled;
+        public final ForgeConfigSpec.IntValue     beehiveHoneyIntervalTicks;
         public final ForgeConfigSpec.BooleanValue moddedCropsEnabled;
         public final ForgeConfigSpec.ConfigValue<List<? extends String>> denylist;
         public final ForgeConfigSpec.BooleanValue trackWildVines;
@@ -121,6 +123,18 @@ public final class Config {
                     .define("caveVinesEnabled", true);
             chorusFlowerEnabled = builder.comment("Enable catch-up growth for chorus flowers")
                     .define("chorusFlowerEnabled", true);
+            beehivesEnabled = builder
+                    .comment("Enable catch-up honey production for beehives and bee nests. When enabled, a hive that",
+                             "had bees and a known flower while you were away keeps filling its honey_level (up to 5)",
+                             "based on elapsed time. Honey only accrues for the daytime share of the time away (bees do",
+                             "not work at night/rain), and EverCrops learns each hive's real fill rate while it is loaded.")
+                    .define("beehivesEnabled", true);
+            beehiveHoneyIntervalTicks = builder
+                    .comment("Cold-start fill rate for beehive catch-up: assumed daytime ticks to gain one honey level",
+                             "before a hive has been observed producing honey while loaded (1200 ticks = 1 minute).",
+                             "Once a hive produces honey while you are nearby, its own measured rate is used instead and",
+                             "this value no longer applies to it. Lower = faster offline honey.")
+                    .defineInRange("beehiveHoneyIntervalTicks", 1_500, 200, 100_000);
             moddedCropsEnabled = builder
                     .comment("Enable catch-up growth for modded growables that pass capability detection (a random-ticking block",
                              "with an 'age'/'stage'/'colony_age' growth property) but do not match any known vanilla category. Default true.")

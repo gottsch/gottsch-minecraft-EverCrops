@@ -68,6 +68,8 @@ public final class EverCropsApi {
         @Override public boolean weepingVinesEnabled() { return true; }
         @Override public boolean caveVinesEnabled() { return true; }
         @Override public boolean chorusFlowerEnabled() { return true; }
+        @Override public boolean beehivesEnabled() { return true; }
+        @Override public int beehiveHoneyIntervalTicks() { return 1500; }
         @Override public boolean moddedCropsEnabled() { return true; }
         @Override public boolean trackWildVines() { return false; }
         @Override public boolean autoCleanupEnabled() { return true; }

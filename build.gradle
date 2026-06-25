@@ -119,6 +119,14 @@ mixin {
     }
 }
 
+// The mixin annotation processor generates the refmap during compileJava. If compileJava is served
+// FROM-CACHE the AP never runs, so the refmap is not produced and ships missing from the jar — at
+// runtime mixin can't remap named->SRG and fails with "No refMap loaded" / "could not find any
+// targets". Disabling the build cache for this task forces the AP to run every build.
+compileJava {
+    outputs.cacheIf { false }
+}
+
 // This block of code expands all declared replace properties in the specified resource targets.
 // A missing property will result in an error. Properties are expanded using ${} Groovy notation.
 // When "copyIdeResources" is enabled, this will also run before the game launches in IDE environments.
