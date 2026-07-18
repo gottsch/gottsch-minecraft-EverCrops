@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Rebuilt the behind-the-scenes system that catches your plants up on the growth they missed while you were away. Every plant type — crops, melon and pumpkin stems, sugar cane, cactus, bamboo, kelp, vines, saplings, and chorus flowers — now runs through one shared, consistent growth engine instead of separate copies of the logic. Nothing changes about how fast or how much things grow; this is groundwork for upcoming features and makes EverCrops more reliable and easier to expand.
 
+---
+
 ## [3.6.0] - 2026-06-23
 
 ### Added
