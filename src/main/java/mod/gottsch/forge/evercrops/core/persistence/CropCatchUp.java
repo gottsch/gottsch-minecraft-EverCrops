@@ -17,136 +17,39 @@
  */
 package mod.gottsch.forge.evercrops.core.persistence;
 
+import mod.gottsch.forge.evercrops.api.CropState;
+import mod.gottsch.forge.evercrops.api.EverCropsApi;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.IntegerProperty;
 
 /**
- * Shared timing/threshold logic used by the single-AGE-property catch-up mixins
- * (sweet berry bush, nether wart, cocoa, etc.).
- *
- * The original CropBlockMixin / StemBlockMixin implementations inline this
- * logic directly. The phase-1 expansion mixins call into this helper so the
- * three near-identical implementations stay DRY.
+ * Internal convenience facade kept for the base mod's own mixins; all logic now lives in the public
+ * {@link EverCropsApi}. New code (and add-ons) should call {@code EverCropsApi} directly.
  *
  * @author Mark Gottschling on 4/26/2026
  */
 public final class CropCatchUp {
 
-    public static final int AVG_CALL_TICK_INTERVAL = 1350;
+    public static final int AVG_CALL_TICK_INTERVAL = EverCropsApi.AVG_CALL_TICK_INTERVAL;
 
     private CropCatchUp() {}
 
-    /**
-     * Decide whether catch-up growth should fire on this random tick, and if so
-     * how many growth steps to apply. Updates the timing fields on
-     * {@code cropState} as a side effect; the caller is responsible for
-     * performing the actual block updates and persisting via
-     * {@link CropRegistry#put}.
-     *
-     * @param level                level the crop lives in
-     * @param pos                  block position
-     * @param cropState            tracked state (mutated in place)
-     * @param avgGrowthInterval    average vanilla ticks between growth steps for this block
-     * @param requiresLight        true if the block needs light &gt;= 9 to grow
-     * @return number of growth steps to apply (0 if no growth this tick)
-     */
     public static int beginCatchUp(ServerLevel level, BlockPos pos, CropState cropState,
                                    int avgGrowthInterval, boolean requiresLight) {
-        long now = level.getGameTime();
-        int light = level.getRawBrightness(pos, 0);
-
-        long callDelta = now - cropState.getLastCallGameTime();
-        if (callDelta <= AVG_CALL_TICK_INTERVAL * 2L) {
-            cropState.setLastCallGameTime(now).setLastCallLightLevel(light);
-            return 0;
-        }
-
-        long growthDelta = now - cropState.getLastGrowthGameTime();
-        if (growthDelta <= avgGrowthInterval * 2L) {
-            return 0;
-        }
-
-        boolean grow = !requiresLight
-                || light >= 9
-                || (!level.isDay() && (cropState.getLastCallLightLevel() >= 9
-                                       || cropState.getLastGrowthLightLevel() >= 9));
-        if (!grow) {
-            cropState.setLastCallGameTime(now).setLastCallLightLevel(light);
-            return 0;
-        }
-
-        int quotient = (int) Math.floor((double) growthDelta / avgGrowthInterval);
-        long remainder = growthDelta % avgGrowthInterval;
-        cropState.setLastGrowthGameTime(now - remainder)
-                .setLastGrowthLightLevel(light)
-                .setLastCallGameTime(now)
-                .setLastCallLightLevel(light);
-        return quotient;
+        return EverCropsApi.beginCatchUp(level, pos, cropState, avgGrowthInterval, requiresLight);
     }
 
-    /**
-     * Detect an in-place harvest (age/stage regression) and, if found, reset this crop's
-     * growth clock so pending catch-up is not re-applied to the replant.
-     *
-     * <p>Right-click harvest mods (e.g. Harvest With Ease) and vanilla sweet-berry-bush
-     * harvesting reset a crop's age in place via a direct {@code setBlock} &mdash; firing
-     * neither {@code BlockEvent.BreakEvent} nor {@code EntityPlaceEvent}. The CropState
-     * therefore survives the harvest carrying its old {@code lastGrowthGameTime}, and
-     * without this guard the freshly-replanted age-0 crop is treated as the same
-     * continuously-growing crop, so any accumulated catch-up delta instantly regrows it.
-     *
-     * <p>A tracked crop's age never decreases under normal growth (growth only raises it;
-     * a real break removes the entry), so a current age below the last age we recorded is a
-     * reliable in-place-harvest signal. We record the current age on every tick and, on a
-     * decrease, stamp the growth/call clocks to {@code now} so the reservoir is spent.
-     *
-     * @param state the block state being random-ticked (its growth property is resolved internally)
-     * @return true if a harvest reset was detected (caller should persist and skip catch-up this tick)
-     */
     public static boolean handleInPlaceHarvest(ServerLevel level, BlockPos pos, CropState cropState, BlockState state) {
-        IntegerProperty growth = CropEligibility.growthPropertyOf(state.getBlock());
-        int currentAge = (growth != null) ? state.getValue(growth) : -1;
-        return handleInPlaceHarvest(level, pos, cropState, currentAge);
+        return EverCropsApi.handleInPlaceHarvest(level, pos, cropState, state);
     }
 
-    /**
-     * Binary-compatibility overload for add-ons compiled against EverCrops 3.5.x (the
-     * {@code int} signature shipped in 3.5.3, e.g. EverCrops: Farmer's Delight 1.1.4),
-     * which pass a pre-resolved age. Retained so that 3.6.0 does not break those add-ons
-     * at runtime. New callers should use the {@link BlockState} overload, which resolves
-     * the growth property itself.
-     *
-     * @param currentAge the block's current age/stage value this tick ({@code -1} = none)
-     * @deprecated since 3.6.0 — prefer
-     *             {@link #handleInPlaceHarvest(ServerLevel, BlockPos, CropState, BlockState)}.
-     */
     @Deprecated
     public static boolean handleInPlaceHarvest(ServerLevel level, BlockPos pos, CropState cropState, int currentAge) {
-        int previousAge = cropState.getLastAge();
-        cropState.setLastAge(currentAge);
-        // currentAge < 0 means no resolvable growth property (e.g. bamboo sapling) — never a regression.
-        if (previousAge >= 0 && currentAge >= 0 && currentAge < previousAge) {
-            long now = level.getGameTime();
-            int light = level.getRawBrightness(pos, 0);
-            cropState.setLastGrowthGameTime(now)
-                    .setLastGrowthLightLevel(light)
-                    .setLastCallGameTime(now)
-                    .setLastCallLightLevel(light);
-            return true;
-        }
-        return false;
+        return EverCropsApi.handleInPlaceHarvest(level, pos, cropState, currentAge);
     }
 
-    /** Build a fresh CropState stamped with the current game time and light level. */
     public static CropState createState(ServerLevel level, BlockPos pos) {
-        long now = level.getGameTime();
-        int light = level.getRawBrightness(pos, 0);
-        return new CropState()
-                .setLastCallGameTime(now)
-                .setLastGrowthGameTime(now)
-                .setLastCallLightLevel(light)
-                .setLastGrowthLightLevel(light);
+        return EverCropsApi.createState(level, pos);
     }
 }

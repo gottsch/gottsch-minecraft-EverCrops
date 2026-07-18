@@ -80,6 +80,7 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
     mavenLocal()
+    mavenCentral()
     maven {
         name = "CurseMaven"
         url = "https://www.cursemaven.com"
@@ -97,6 +98,18 @@ dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     if (project.mixin.toBoolean()) annotationProcessor "org.spongepowered:mixin:${mixinVersion}:processor"
 
+    // Unit tests for the pure catch-up logic (CatchUpDecision). These intentionally avoid
+    // Minecraft types so they need no game bootstrap, no mocking and no GameTest structure.
+    testImplementation platform('org.junit:junit-bom:5.10.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
 }
 
 mixin {
@@ -104,6 +117,14 @@ mixin {
         config "${mod_id}.mixins.json"
         add sourceSets.main, "${mod_id}.refmap.json"
     }
+}
+
+// The mixin annotation processor generates the refmap during compileJava. If compileJava is served
+// FROM-CACHE the AP never runs, so the refmap is not produced and ships missing from the jar — at
+// runtime mixin can't remap named->SRG and fails with "No refMap loaded" / "could not find any
+// targets". Disabling the build cache for this task forces the AP to run every build.
+compileJava {
+    outputs.cacheIf { false }
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
