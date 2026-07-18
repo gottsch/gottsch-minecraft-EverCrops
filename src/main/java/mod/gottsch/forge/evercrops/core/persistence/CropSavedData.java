@@ -16,6 +16,7 @@
  * along with EverCrops.  If not, see <http://www.gnu.org/licenses/lgpl>.
  */
 package mod.gottsch.forge.evercrops.core.persistence;
+import mod.gottsch.forge.evercrops.api.CropState;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;

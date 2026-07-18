@@ -17,8 +17,11 @@
  */
 package mod.gottsch.forge.evercrops.core;
 
+import mod.gottsch.forge.evercrops.api.EverCropsApi;
 import mod.gottsch.forge.evercrops.core.config.Config;
+import mod.gottsch.forge.evercrops.core.config.EverCropsConfigViewImpl;
 import mod.gottsch.forge.evercrops.core.event.ModEvents;
+import mod.gottsch.forge.evercrops.core.persistence.CropRegistryAdapter;
 import mod.gottsch.forge.evercrops.core.setup.CommonSetup;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -37,6 +40,9 @@ public class EverCrops {
     public static final String MOD_ID = "evercrops";
 
     public EverCrops(IEventBus modEventBus, ModContainer modContainer) {
+        // Wire the public API to this loader's config + persistence before anything ticks.
+        EverCropsApi.bindConfig(new EverCropsConfigViewImpl());
+        EverCropsApi.bindRegistry(new CropRegistryAdapter());
         Config.register(modContainer);
         ModEvents.registerPredicates();
         modEventBus.addListener(CommonSetup::init);

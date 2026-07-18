@@ -96,6 +96,8 @@ public final class Config {
         public final ModConfigSpec.BooleanValue weepingVinesEnabled;
         public final ModConfigSpec.BooleanValue caveVinesEnabled;
         public final ModConfigSpec.BooleanValue chorusFlowerEnabled;
+        public final ModConfigSpec.BooleanValue beehivesEnabled;
+        public final ModConfigSpec.IntValue     beehiveHoneyIntervalTicks;
         public final ModConfigSpec.BooleanValue moddedCropsEnabled;
         public final ModConfigSpec.ConfigValue<List<? extends String>> denylist;
         public final ModConfigSpec.BooleanValue trackWildVines;
@@ -153,6 +155,20 @@ public final class Config {
                              "Due to branching growth mechanics, at most one growth step is applied per catch-up event " +
                              "to prevent excessive structure expansion.")
                     .define("chorusFlowerEnabled", true);
+
+            beehivesEnabled = builder
+                    .comment("Enable catch-up honey production for beehives and bee nests. When enabled, a hive that " +
+                             "had bees and a known flower while you were away keeps filling its honey_level (up to 5) " +
+                             "based on elapsed time. Honey only accrues for the daytime share of the time away (bees do " +
+                             "not work at night/rain), and EverCrops learns each hive's real fill rate while it is loaded.")
+                    .define("beehivesEnabled", true);
+
+            beehiveHoneyIntervalTicks = builder
+                    .comment("Cold-start fill rate for beehive catch-up: assumed daytime ticks to gain one honey level " +
+                             "before a hive has been observed producing honey while loaded (1200 ticks = 1 minute). " +
+                             "Once a hive produces honey while you are nearby, its own measured rate is used instead and " +
+                             "this value no longer applies to it. Lower = faster offline honey.")
+                    .defineInRange("beehiveHoneyIntervalTicks", 1_500, 200, 100_000);
 
             moddedCropsEnabled = builder
                     .comment("Enable catch-up growth for modded growables that pass capability detection (a random-ticking block " +

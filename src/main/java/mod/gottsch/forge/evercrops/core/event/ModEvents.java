@@ -19,14 +19,16 @@ package mod.gottsch.forge.evercrops.core.event;
 
 import mod.gottsch.forge.evercrops.core.EverCrops;
 import mod.gottsch.forge.evercrops.core.config.Config;
-import mod.gottsch.forge.evercrops.core.persistence.CropBlockPredicates;
+import mod.gottsch.forge.evercrops.api.CropBlockPredicates;
+import mod.gottsch.forge.evercrops.core.persistence.BeehiveRegistry;
 import mod.gottsch.forge.evercrops.core.persistence.CropCatchUp;
 import mod.gottsch.forge.evercrops.core.persistence.CropEligibility;
 import mod.gottsch.forge.evercrops.core.persistence.CropRegistry;
-import mod.gottsch.forge.evercrops.core.persistence.CropState;
+import mod.gottsch.forge.evercrops.api.CropState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.BeehiveBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.CaveVinesBlock;
 import net.minecraft.world.level.block.CaveVinesPlantBlock;
@@ -101,6 +103,14 @@ public class ModEvents {
         BlockState state = event.getState();
         BlockPos pos = event.getPos();
         Block block = state.getBlock();
+
+        // Beehives track in their own store; drop the entry so a hive later placed here does not
+        // inherit this hive's stale clock/learned rate. (Piston-moved/other removals are caught by
+        // the periodic auto-cleanup instead.)
+        if (block instanceof BeehiveBlock) {
+            BeehiveRegistry.remove(serverLevel, pos);
+            return;
+        }
 
         if (isTracked(state)) {
             // HEAD broken directly. Move the CropState to the body block that will become
@@ -203,9 +213,10 @@ public class ModEvents {
         if (serverLevel.getGameTime() % interval != 0) return;
 
         int removed = CropRegistry.cleanup(serverLevel, CropBlockPredicates::isCropBlock);
-        if (removed > 0) {
-            EverCrops.LOGGER.info("Auto-cleanup removed {} stale crop entr{} in {}.",
-                    removed, removed == 1 ? "y" : "ies", serverLevel.dimension().location());
+        int removedHives = BeehiveRegistry.cleanup(serverLevel, s -> s.getBlock() instanceof BeehiveBlock);
+        if (removed > 0 || removedHives > 0) {
+            EverCrops.LOGGER.info("Auto-cleanup removed {} stale crop and {} stale hive entr{} in {}.",
+                    removed, removedHives, (removed + removedHives) == 1 ? "y" : "ies", serverLevel.dimension().location());
         } else {
             EverCrops.LOGGER.debug("Auto-cleanup: no stale entries in {}.",
                     serverLevel.dimension().location());

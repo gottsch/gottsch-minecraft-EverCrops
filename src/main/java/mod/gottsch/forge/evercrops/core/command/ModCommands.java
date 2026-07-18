@@ -30,7 +30,6 @@ public class ModCommands {
 
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
-        StatsCommand.register(event.getDispatcher());
         EverCropsCommand.register(event.getDispatcher());
     }
 }
