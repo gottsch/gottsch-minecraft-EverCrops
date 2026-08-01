@@ -37,6 +37,18 @@ When a crop is placed, EverCrops registers it and stamps it with the current gam
 
 ---
 
+## Beehives
+
+**New:** beehives and bee nests keep making honey while you're away, too. If a hive has bees living in it and a flower within reach, its honey keeps building toward full based on the time you were gone — so you won't return to a hive frozen exactly where you left it.
+
+- 🐝 Works on both **beehives** and **bee nests**
+- ☀️ Honey only builds during the **daytime** part of your time away (bees don't work at night or in the rain)
+- 📈 EverCrops watches each hive while you're nearby to learn how fast it actually produces, so catch-up matches that hive's own pace instead of a fixed guess
+- 🌼 A hive with no bees, or no flowers in range, won't gain honey while you're gone
+- ⚙️ Toggle it with the `beehivesEnabled` setting (on by default)
+
+---
+
 ## Compatibility
 
 EverCrops uses **only** `@Inject`, `@Accessor`, and `@Invoker` mixins — no overwrites, no replacements. It introduces **no custom blocks and no block entities**. This makes it broadly compatible with other mixin-based mods and means uninstalling it is safe: your world keeps all its existing crops, they just go back to vanilla behavior.
