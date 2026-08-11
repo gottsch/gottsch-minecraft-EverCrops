@@ -3,6 +3,7 @@
   "package": "mod.gottsch.forge.evercrops.core.mixin",
   "compatibilityLevel": "JAVA_21",
   "refmap": "evercrops.refmap.json",
+  "mixinPriority": 1500,
   "mixins": [
     "BambooSaplingBlockMixin",
     "BambooStalkBlockMixin",

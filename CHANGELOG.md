@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.0.1] - 2026-08-10
+
+### Fixed
+
+- Fixed a crash on startup when EverCrops was installed alongside Perfect Parity: Spring to Life Reforged. Both mods change how cactus grows, and they were stepping on each other before the game could finish loading. EverCrops now gets out of the way and applies its changes after other mods have made theirs, so the two work together. Cactus still catches up on the growth it missed while you were away, and Perfect Parity's cactus flowers still appear as normal. This should also head off the same kind of startup crash with other mods that rewrite how a plant grows.
+
+---
+
 ## [4.0.0] - 2026-06-24
 
 ### Added
