@@ -36,6 +36,7 @@ import net.minecraft.world.level.block.SaplingBlock;
 import net.minecraft.world.level.block.StemBlock;
 import net.minecraft.world.level.block.SugarCaneBlock;
 import net.minecraft.world.level.block.SweetBerryBushBlock;
+import net.minecraft.world.level.block.TurtleEggBlock;
 import net.minecraft.world.level.block.TwistingVinesBlock;
 import net.minecraft.world.level.block.WeepingVinesBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -74,7 +75,7 @@ public final class CropEligibility {
     private CropEligibility() {}
 
     /** Toggle-routing category for a block state. {@code OTHER} = eligible but not a known vanilla category. */
-    public enum Category { CROPS, STEM, BUSH, COLUMN, SAPLING, BAMBOO, TWISTING, WEEPING, CAVE, CHORUS, OTHER }
+    public enum Category { CROPS, STEM, BUSH, COLUMN, SAPLING, BAMBOO, TWISTING, WEEPING, CAVE, CHORUS, EGGS, OTHER }
 
     // -------------------------------------------------
     // Capability (config-independent)
@@ -151,6 +152,9 @@ public final class CropEligibility {
         if (block instanceof WeepingVinesBlock) return Category.WEEPING;
         if (block instanceof CaveVinesBlock) return Category.CAVE;
         if (block instanceof ChorusFlowerBlock) return Category.CHORUS;
+        // Incubating eggs (turtle eggs today; sniffer eggs share the same HATCH axis) grow on the
+        // 'hatch' property rather than age/stage, but are otherwise ordinary random-tick growables.
+        if (block instanceof TurtleEggBlock) return Category.EGGS;
         return Category.OTHER;
     }
 
@@ -167,6 +171,7 @@ public final class CropEligibility {
             case WEEPING  -> config.weepingVinesEnabled();
             case CAVE     -> config.caveVinesEnabled();
             case CHORUS   -> config.chorusFlowerEnabled();
+            case EGGS     -> config.turtleEggsEnabled();
             case OTHER    -> config.moddedCropsEnabled();
         };
     }

@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.1.0] - Unreleased
+
+### Added
+
+- 🐢 **Turtle eggs** now keep hatching while you're away. A nest sitting on sand carries on cracking, and eventually hatches into baby turtles — one per egg in the cluster, just like it would if you'd stood there and watched. Come back to a beach nest you left days ago and you'll find turtles, not the same untouched eggs. Eggs that aren't on sand still don't do anything, same as normal.
+- New **Turtle eggs** setting (`turtleEggsEnabled`, on by default) to turn egg catch-up on or off, plus a setting to tune how fast eggs hatch while you're gone (`turtleEggHatchIntervalTicks`).
+- If you'd rather not come back to a pile of new turtles all at once, `turtleEggSpawnTurtles` lets you have eggs crack all the way while you're away but wait for you to be nearby before actually hatching.
+- Beaches can have a lot of wild turtle nests, so by default only nests you placed yourself are kept track of. Turn on `trackWildTurtleEggs` if you want wild beach nests to hatch while you're away too.
+- `/evercrops inspect` on a turtle egg nest now shows whether it's on sand, how many eggs are in it, how many cracking stages are left, and roughly how long that will take.
+
+---
+
 ## [4.0.1] - 2026-08-10
 
 ### Fixed

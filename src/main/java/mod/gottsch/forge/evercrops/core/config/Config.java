@@ -98,6 +98,10 @@ public final class Config {
         public final ModConfigSpec.BooleanValue chorusFlowerEnabled;
         public final ModConfigSpec.BooleanValue beehivesEnabled;
         public final ModConfigSpec.IntValue     beehiveHoneyIntervalTicks;
+        public final ModConfigSpec.BooleanValue turtleEggsEnabled;
+        public final ModConfigSpec.IntValue     turtleEggHatchIntervalTicks;
+        public final ModConfigSpec.BooleanValue turtleEggSpawnTurtles;
+        public final ModConfigSpec.BooleanValue trackWildTurtleEggs;
         public final ModConfigSpec.BooleanValue moddedCropsEnabled;
         public final ModConfigSpec.ConfigValue<List<? extends String>> denylist;
         public final ModConfigSpec.BooleanValue trackWildVines;
@@ -109,7 +113,7 @@ public final class Config {
                    .push("crops");
 
             cropsEnabled = builder
-                    .comment("Enable catch-up growth for standard crops: wheat, carrots, potatoes, beetroot, pitcher plant, torchflower, and modded subclasses.")
+                    .comment("Enable catch-up growth for standard crops: wheat, carrots, potatoes, beetroot, torchflower, and modded subclasses.")
                     .define("cropsEnabled", true);
 
             stemCropsEnabled = builder
@@ -169,6 +173,31 @@ public final class Config {
                              "Once a hive produces honey while you are nearby, its own measured rate is used instead and " +
                              "this value no longer applies to it. Lower = faster offline honey.")
                     .defineInRange("beehiveHoneyIntervalTicks", 1_500, 200, 100_000);
+
+            turtleEggsEnabled = builder
+                    .comment("Enable catch-up hatching for turtle eggs. When enabled, an egg cluster sitting on sand keeps " +
+                             "cracking (and eventually hatching into baby turtles) based on how long the chunk was unloaded. " +
+                             "Eggs not on sand make no progress, matching vanilla.")
+                    .define("turtleEggsEnabled", true);
+
+            turtleEggHatchIntervalTicks = builder
+                    .comment("Assumed ticks per turtle-egg hatch stage. There are 3 stages from a fresh egg to baby turtles, " +
+                             "so the default 32000 works out to roughly 4 in-game days total - about the vanilla pace. " +
+                             "Vanilla eggs only advance during a short window near dawn, so this is a flat-rate approximation " +
+                             "of that daily cadence. Lower = faster offline hatching.")
+                    .defineInRange("turtleEggHatchIntervalTicks", 32_000, 1_200, 500_000);
+
+            turtleEggSpawnTurtles = builder
+                    .comment("Whether catch-up may complete the final hatch and spawn baby turtles. When false, catch-up still " +
+                             "cracks eggs offline but stops at fully-cracked, leaving the actual hatch to vanilla once a player " +
+                             "is nearby. Useful on servers that want tight control over entity counts.")
+                    .define("turtleEggSpawnTurtles", true);
+
+            trackWildTurtleEggs = builder
+                    .comment("Track naturally-generated (wild) turtle egg clusters for catch-up hatching. When false (default), " +
+                             "only placed clusters are tracked, which keeps the saved registry small near beaches. " +
+                             "Set true if you want wild beach nests to hatch while you are away too.")
+                    .define("trackWildTurtleEggs", false);
 
             moddedCropsEnabled = builder
                     .comment("Enable catch-up growth for modded growables that pass capability detection (a random-ticking block " +

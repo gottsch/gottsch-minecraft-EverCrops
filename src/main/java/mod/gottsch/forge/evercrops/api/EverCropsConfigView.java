@@ -59,6 +59,23 @@ public interface EverCropsConfigView {
      */
     int beehiveHoneyIntervalTicks();
 
+    boolean turtleEggsEnabled();
+
+    /**
+     * Assumed ticks per turtle-egg hatch stage (three stages from a fresh egg to baby turtles).
+     * Vanilla only advances eggs during a short window near dawn; this is a flat-rate approximation
+     * of that daily cadence. See {@code TurtleEggDecision}.
+     */
+    int turtleEggHatchIntervalTicks();
+
+    /**
+     * Whether catch-up may complete the final hatch and spawn baby turtles. When false, catch-up
+     * cracks eggs offline but stops at fully-cracked, leaving the hatch itself to vanilla.
+     */
+    boolean turtleEggSpawnTurtles();
+
+    boolean trackWildTurtleEggs();
+
     boolean moddedCropsEnabled();
 
     boolean trackWildVines();

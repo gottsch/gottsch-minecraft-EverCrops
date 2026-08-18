@@ -23,6 +23,7 @@
     "StemBlockMixin",
     "SugarCaneBlockMixin",
     "SweetBerryBushBlockMixin",
+    "TurtleEggBlockMixin",
     "TwistingVinesBlockMixin",
     "WeepingVinesBlockMixin"
   ],
