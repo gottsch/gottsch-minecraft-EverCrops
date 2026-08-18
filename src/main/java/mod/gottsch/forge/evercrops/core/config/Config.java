@@ -113,7 +113,7 @@ public final class Config {
                    .push("crops");
 
             cropsEnabled = builder
-                    .comment("Enable catch-up growth for standard crops: wheat, carrots, potatoes, beetroot, pitcher plant, torchflower, and modded subclasses.")
+                    .comment("Enable catch-up growth for standard crops: wheat, carrots, potatoes, beetroot, torchflower, and modded subclasses.")
                     .define("cropsEnabled", true);
 
             stemCropsEnabled = builder

@@ -14,17 +14,21 @@ Note: in single-player worlds, time does not pass while you are not playing, so 
 
 ---
 
-## Supported crops
+## Supported blocks
 
-| Category | Crops |
+| Category | Blocks |
 |---|---|
-| **Standard crops** | Wheat, carrots, potatoes, beetroot, pitcher plant, torchflower |
+| **Standard crops** | Wheat, carrots, potatoes, beetroot, torchflower |
 | **Stem crops** | Melon stems, pumpkin stems (including fruit spread) |
 | **Bush / special crops** | Sweet berry bushes, nether wart, cocoa pods |
 | **Column crops** | Sugar cane, cactus, kelp |
 | **Bamboo** | Bamboo (sky-light required, max height 16) |
 | **Nether vines** | Twisting vines (grows up), weeping vines (grows down) |
+| **Cave vines** | Glow berries (grows down) |
+| **Chorus flowers** | Chorus flowers (End; one growth step per catch-up event) |
 | **Saplings** | Oak, birch, spruce, jungle, acacia, dark oak, cherry, mangrove |
+| **Beehives** | Beehives and bee nests (honey level; daytime only, per-hive learned rate) |
+| **Turtle eggs** | Turtle egg clusters on sand (crack, then hatch into one baby turtle per egg) |
 
 Most modded crops that subclass any of the above vanilla classes are also supported automatically.
 
@@ -36,22 +40,34 @@ EverCrops adds a per-world server config (`serverconfig/evercrops-server.toml`) 
 
 ```toml
 [crops]
-    # Enable catch-up growth for standard crops
+    # Per-category toggles
     cropsEnabled = true
-    # Enable catch-up growth for stem crops (melon/pumpkin)
     stemCropsEnabled = true
-    # Enable catch-up growth for bush/special crops
     bushCropsEnabled = true
-    # Enable catch-up growth for column crops (cane/cactus/kelp)
     columnCropsEnabled = true
-    # Enable catch-up growth for saplings
     saplingCropsEnabled = true
-    # Enable catch-up growth for bamboo
     bambooEnabled = true
-    # Enable catch-up growth for twisting vines
     twistingVinesEnabled = true
-    # Enable catch-up growth for weeping vines
     weepingVinesEnabled = true
+    caveVinesEnabled = true
+    chorusFlowerEnabled = true
+    beehivesEnabled = true
+    turtleEggsEnabled = true
+
+    # Rate tuning
+    beehiveHoneyIntervalTicks = 1500      # cold-start ticks per honey level, until a hive's own rate is learned
+    turtleEggHatchIntervalTicks = 32000   # ticks per hatch stage (3 stages from fresh egg to turtles)
+
+    # Behaviour
+    turtleEggSpawnTurtles = true          # false = crack eggs offline, but leave the hatch to vanilla
+    trackWildVines = false                # track wild kelp/vines/chorus, not just placed ones
+    trackWildTurtleEggs = false           # track wild beach nests, not just placed ones
+    moddedCropsEnabled = true             # modded growables detected by capability but matching no category
+    denylist = ["minecraft:fire", "minecraft:soul_fire", "minecraft:frosted_ice"]
+
+[cleanup]
+    autoCleanupEnabled = true
+    autoCleanupIntervalTicks = 36000
 ```
 
 ---
@@ -63,6 +79,7 @@ EverCrops adds a per-world server config (`serverconfig/evercrops-server.toml`) 
 | `/evercrops simulate [ticks] [radius]` | Backdates all tracked crops within `radius` blocks of the player by `ticks`, triggering catch-up on the next random tick. Useful for testing. |
 | `/evercrops tick [radius]`             | Forces a `randomTick` on every tracked crop within `radius` blocks of the player right now. |
 | `/evercrops inspect [x y z]`           | Shows the stored `CropState` for a position (defaults to the player's feet). |
+| `/evercrops cleanup`                   | Removes tracking entries in loaded chunks whose block is no longer a tracked crop or hive. |
 
 ---
 
@@ -74,4 +91,4 @@ EverCrops only uses `@Inject`, `@Accessor`, and `@Invoker` Mixin annotations. No
 
 ## Technical notes
 
-Crop state is stored as NBT in `<world>/data/evercrops.dat` per dimension using Minecraft's built-in `SavedData` system. No native libraries or manual lifecycle management required.
+Crop state is stored as NBT in `<world>/data/evercrops.dat` per dimension using Minecraft's built-in `SavedData` system; beehive state lives alongside it in `evercrops_bees.dat`. No native libraries or manual lifecycle management required.
