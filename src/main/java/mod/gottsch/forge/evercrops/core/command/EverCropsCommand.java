@@ -40,6 +40,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.BeehiveBlock;
+import net.minecraft.world.level.block.TurtleEggBlock;
 import net.minecraft.world.level.block.entity.BeehiveBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
@@ -253,6 +254,12 @@ public class EverCropsCommand {
             return inspectBeehive(source, level, pos, blockState);
         }
 
+        // Turtle eggs ride the ordinary crop store, so they fall through to the CropState section
+        // below — but their eligibility and pace come from elsewhere, so surface those first.
+        if (blockState.getBlock() instanceof TurtleEggBlock) {
+            inspectTurtleEggExtras(source, level, pos, blockState);
+        }
+
         if (opt.isEmpty()) {
             source.sendSuccess(() -> Component.literal(
                     "  tracked            : no — no CropState recorded (not registered for catch-up)")
@@ -288,6 +295,39 @@ public class EverCropsCommand {
                 + "; per-crop interval varies, e.g. saplings need ~18900)")
                 .withStyle(wouldTrigger ? ChatFormatting.GREEN : ChatFormatting.GRAY), false);
         return 1;
+    }
+
+    // ------------------------------------------------------------------
+    // /evercrops inspect — turtle egg supplement
+    // ------------------------------------------------------------------
+
+    /**
+     * Turtle-egg-specific inspect lines, printed above the shared CropState section: the live sand
+     * requirement (eggs off sand never progress, in vanilla or in catch-up), the configured pace,
+     * and whether catch-up is allowed to finish the hatch.
+     */
+    private static void inspectTurtleEggExtras(CommandSourceStack source, ServerLevel level,
+                                               BlockPos pos, BlockState blockState) {
+        boolean onSand = TurtleEggBlock.onSand(level, pos);
+        int interval = EverCropsApi.config().turtleEggHatchIntervalTicks();
+        int hatch = blockState.getValue(TurtleEggBlock.HATCH);
+        int remaining = Math.max(0, TurtleEggBlock.MAX_HATCH_LEVEL + 1 - hatch);
+
+        source.sendSuccess(() -> Component.literal(
+                "  on sand            : " + (onSand ? "yes" : "no — will not hatch (vanilla or catch-up)"))
+                .withStyle(onSand ? ChatFormatting.GREEN : ChatFormatting.RED), false);
+        source.sendSuccess(() -> Component.literal(
+                "  eggs in cluster    : " + blockState.getValue(TurtleEggBlock.EGGS)
+                + "  (turtles released on hatch)")
+                .withStyle(ChatFormatting.WHITE), false);
+        source.sendSuccess(() -> Component.literal(
+                "  hatch interval     : " + interval + " ticks/stage, " + remaining + " stage(s) left"
+                + "  (~" + String.format("%.1f", remaining * interval / 24000.0) + " in-game days)")
+                .withStyle(ChatFormatting.WHITE), false);
+        source.sendSuccess(() -> Component.literal(
+                "  may spawn turtles  : " + (EverCropsApi.config().turtleEggSpawnTurtles()
+                        ? "yes" : "no — catch-up stops at fully cracked (turtleEggSpawnTurtles = false)"))
+                .withStyle(ChatFormatting.WHITE), false);
     }
 
     // ------------------------------------------------------------------

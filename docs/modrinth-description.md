@@ -24,6 +24,7 @@ When a crop is placed, EverCrops registers it and stamps it with the current gam
 - 🥕 Carrots
 - 🥔 Potatoes
 - 🌱 Beetroots
+- 🔦 Torchflower
 - 🍉 Melon stems (including fruit spread)
 - 🎃 Pumpkin stems (including fruit spread)
 - 🫐 Sweet berry bushes
@@ -32,6 +33,11 @@ When a crop is placed, EverCrops registers it and stamps it with the current gam
 - 🎋 Sugar cane
 - 🌵 Cactus
 - 🌿 Kelp
+- 🎍 Bamboo
+- 🍇 Glow berries (cave vines)
+- 🌀 Twisting vines
+- 🍂 Weeping vines
+- 🟣 Chorus flowers
 - 🌳 Saplings (oak, birch, spruce, jungle, acacia, dark oak, cherry, mangrove, and modded saplings that extend `SaplingBlock`)
 - ✨ Most modded crops that subclass any of the above vanilla classes
 
@@ -39,13 +45,25 @@ When a crop is placed, EverCrops registers it and stamps it with the current gam
 
 ## Beehives
 
-**New:** beehives and bee nests keep making honey while you're away, too. If a hive has bees living in it and a flower within reach, its honey keeps building toward full based on the time you were gone — so you won't return to a hive frozen exactly where you left it.
+Beehives and bee nests keep making honey while you're away, too. If a hive has bees living in it and a flower within reach, its honey keeps building toward full based on the time you were gone — so you won't return to a hive frozen exactly where you left it.
 
 - 🐝 Works on both **beehives** and **bee nests**
 - ☀️ Honey only builds during the **daytime** part of your time away (bees don't work at night or in the rain)
 - 📈 EverCrops watches each hive while you're nearby to learn how fast it actually produces, so catch-up matches that hive's own pace instead of a fixed guess
 - 🌼 A hive with no bees, or no flowers in range, won't gain honey while you're gone
 - ⚙️ Toggle it with the `beehivesEnabled` setting (on by default)
+
+---
+
+## Turtle eggs
+
+**New:** turtle eggs keep hatching while you're away. A nest sitting on sand carries on cracking, and eventually hatches into baby turtles — so a beach nest you left days ago won't be sitting exactly where you left it.
+
+- 🐢 One baby turtle per egg in the cluster, exactly like vanilla
+- 🏖️ Eggs still need **sand** underneath — a nest that isn't on sand makes no progress, same as vanilla
+- 🐣 Prefer not to come back to a crowd? `turtleEggSpawnTurtles` lets eggs crack all the way while you're away, then wait for you to be nearby before actually hatching
+- 🥚 Beaches can have a lot of wild nests, so by default only nests **you placed** are tracked — turn on `trackWildTurtleEggs` to include wild ones
+- ⚙️ Toggle it with the `turtleEggsEnabled` setting (on by default)
 
 ---
 
@@ -71,13 +89,14 @@ EverCrops uses **only** `@Inject`, `@Accessor`, and `@Invoker` mixins — no ove
 
 ## Commands
 
-EverCrops ships with admin/debug commands under `/evercrops` (requires op level 2). All commands target the block at the given position.
+EverCrops ships with admin/debug commands under `/evercrops` (requires op level 2).
 
 | Command | Purpose |
 | --- | --- |
-| `/evercrops inspect [pos]` | Print the crop's tracked state: position, block, age, last-call/last-growth game times, last light levels, and computed deltas. |
-| `/evercrops tick [pos]` | Force a single random tick on the crop, so you can verify behavior without waiting. |
-| `/evercrops simulate [pos] [ticks]` | Advance the crop's tracked "last call" and "last growth" times by a number of game ticks, then tick it — useful for testing how the catch-up math behaves over long absences. |
+| `/evercrops inspect [pos]` | Print the tracked state at a position — or where you're standing, if you omit one: block, growth properties, last-call/last-growth game times, light levels, and computed deltas. Beehives and turtle egg nests report extra detail of their own. |
+| `/evercrops tick <radius>` | Force a random tick on every tracked block within `radius` (1–128) blocks of you, so you can verify behavior without waiting. Beehives are driven too. |
+| `/evercrops simulate <ticks> <radius>` | Backdate the tracked times of everything within `radius` by `ticks` game ticks, then tick it — useful for testing how the catch-up math behaves over long absences. |
+| `/evercrops cleanup` | Drop tracking entries in loaded chunks whose block is no longer a tracked crop or hive. |
 
 These are intended for server admins and modpack debugging. They have no effect on normal gameplay.
 
