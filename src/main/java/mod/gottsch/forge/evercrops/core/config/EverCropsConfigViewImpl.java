@@ -41,6 +41,10 @@ public final class EverCropsConfigViewImpl implements EverCropsConfigView {
     @Override public boolean chorusFlowerEnabled() { return Config.SERVER.chorusFlowerEnabled.get(); }
     @Override public boolean beehivesEnabled()     { return Config.SERVER.beehivesEnabled.get(); }
     @Override public int beehiveHoneyIntervalTicks(){ return Config.SERVER.beehiveHoneyIntervalTicks.get(); }
+    @Override public boolean turtleEggsEnabled()   { return Config.SERVER.turtleEggsEnabled.get(); }
+    @Override public int turtleEggHatchIntervalTicks(){ return Config.SERVER.turtleEggHatchIntervalTicks.get(); }
+    @Override public boolean turtleEggSpawnTurtles(){ return Config.SERVER.turtleEggSpawnTurtles.get(); }
+    @Override public boolean trackWildTurtleEggs() { return Config.SERVER.trackWildTurtleEggs.get(); }
     @Override public boolean moddedCropsEnabled()  { return Config.SERVER.moddedCropsEnabled.get(); }
     @Override public boolean trackWildVines()      { return Config.SERVER.trackWildVines.get(); }
     @Override public boolean autoCleanupEnabled()  { return Config.SERVER.autoCleanupEnabled.get(); }

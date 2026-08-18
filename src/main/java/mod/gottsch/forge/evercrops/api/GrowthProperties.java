@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Capability detection (v4 §A, public API): resolve a block's growth {@link IntegerProperty} — the
- * {@code age} / {@code stage} / {@code colony_age} axis it advances along as it grows — by name,
+ * {@code age} / {@code stage} / {@code colony_age} / {@code hatch} axis it advances along as it grows — by name,
  * cached per {@link Block} so the lookup stays cheap on the random-tick hot path.
  *
  * <p>Loader-agnostic and config-independent: this is pure "what axis does this block grow on?",
@@ -40,11 +40,16 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class GrowthProperties {
 
-    /** Property names treated as a growth axis. */
-    public static final Set<String> GROWTH_PROPERTY_NAMES = Set.of("age", "stage", "colony_age");
+    /**
+     * Property names treated as a growth axis.
+     *
+     * <p>{@code hatch} is the turtle-egg / sniffer-egg incubation axis — a genuine bounded growth
+     * ladder like {@code age}, just one that ends by removing the block rather than ripening it.
+     */
+    public static final Set<String> GROWTH_PROPERTY_NAMES = Set.of("age", "stage", "colony_age", "hatch");
 
     /** Preference order when a block exposes more than one allowlisted growth property. */
-    private static final List<String> GROWTH_PROPERTY_PREFERENCE = List.of("age", "stage", "colony_age");
+    private static final List<String> GROWTH_PROPERTY_PREFERENCE = List.of("age", "stage", "colony_age", "hatch");
 
     /** Per-Block resolved growth property cache (Optional.empty() = resolved, none found). */
     private static final Map<Block, Optional<IntegerProperty>> CACHE = new ConcurrentHashMap<>();

@@ -29,6 +29,7 @@
 <li>Carrots</li>
 <li>Potatoes</li>
 <li>Beetroots</li>
+<li>Torchflower</li>
 <li>Melon stems (including fruit spread)</li>
 <li>Pumpkin stems (including fruit spread)</li>
 <li>Sweet berry bushes</li>
@@ -37,6 +38,12 @@
 <li>Sugar cane</li>
 <li>Cactus</li>
 <li>Kelp</li>
+<li>Bamboo</li>
+<li>Glow berries (cave vines)</li>
+<li>Twisting vines</li>
+<li>Weeping vines</li>
+<li>Chorus flowers</li>
+<li>Saplings (oak, birch, spruce, jungle, acacia, dark oak, cherry, mangrove, and modded saplings that extend <code style="background:#eee;padding:2px 4px;">SaplingBlock</code>)</li>
 <li>Most modded crops that subclass any of the above vanilla classes</li>
 </ul>
 
@@ -44,7 +51,7 @@
 
 <h2 style="color:#4CAF50;">Beehives</h2>
 
-<p><strong>New:</strong> beehives and bee nests keep making honey while you're away, too. If a hive has bees living in it and a flower within reach, its honey keeps building toward full based on the time you were gone &mdash; so you won't return to a hive frozen exactly where you left it.</p>
+<p>Beehives and bee nests keep making honey while you're away, too. If a hive has bees living in it and a flower within reach, its honey keeps building toward full based on the time you were gone &mdash; so you won't return to a hive frozen exactly where you left it.</p>
 
 <ul>
 <li>Works on both <strong>beehives</strong> and <strong>bee nests</strong>.</li>
@@ -52,6 +59,20 @@
 <li>EverCrops watches each hive while you're nearby to learn how fast it actually produces, so catch-up matches that hive's own pace instead of a fixed guess.</li>
 <li>A hive with no bees, or no flowers in range, won't gain honey while you're gone.</li>
 <li>Toggle it with the <code style="background:#eee;padding:2px 4px;">beehivesEnabled</code> setting (on by default).</li>
+</ul>
+
+<hr/>
+
+<h2 style="color:#4CAF50;">Turtle eggs</h2>
+
+<p><strong>New:</strong> turtle eggs keep hatching while you're away. A nest sitting on sand carries on cracking, and eventually hatches into baby turtles &mdash; so a beach nest you left days ago won't be sitting exactly where you left it.</p>
+
+<ul>
+<li>One baby turtle per egg in the cluster, exactly like vanilla.</li>
+<li>Eggs still need <strong>sand</strong> underneath &mdash; a nest that isn't on sand makes no progress, same as vanilla.</li>
+<li>Prefer not to come back to a crowd? <code style="background:#eee;padding:2px 4px;">turtleEggSpawnTurtles</code> lets eggs crack all the way while you're away, then wait for you to be nearby before actually hatching.</li>
+<li>Beaches can have a lot of wild nests, so by default only nests <strong>you placed</strong> are tracked &mdash; turn on <code style="background:#eee;padding:2px 4px;">trackWildTurtleEggs</code> to include wild ones.</li>
+<li>Toggle it with <code style="background:#eee;padding:2px 4px;">turtleEggsEnabled</code> (on by default).</li>
 </ul>
 
 <hr/>
@@ -82,7 +103,7 @@
 
 <h2 style="color:#4CAF50;">Commands</h2>
 
-<p>EverCrops ships with admin/debug commands under <code style="background:#eee;padding:2px 4px;">/evercrops</code> (requires op level 2). All commands target the block at the given position.</p>
+<p>EverCrops ships with admin/debug commands under <code style="background:#eee;padding:2px 4px;">/evercrops</code> (requires op level 2).</p>
 
 <table style="border-collapse:collapse;width:100%;">
 <thead>
@@ -93,16 +114,20 @@
 </thead>
 <tbody>
 <tr>
-<td style="border:1px solid #ccc;padding:6px;"><code style="background:#eee;padding:2px 4px;">/evercrops inspect &lt;pos&gt;</code></td>
-<td style="border:1px solid #ccc;padding:6px;">Print the crop's tracked state: position, block, age, last-call/last-growth game times, last light levels, and computed deltas.</td>
+<td style="border:1px solid #ccc;padding:6px;"><code style="background:#eee;padding:2px 4px;">/evercrops inspect [pos]</code></td>
+<td style="border:1px solid #ccc;padding:6px;">Print the tracked state at a position &mdash; or where you're standing, if you omit one: block, growth properties, last-call/last-growth game times, light levels, and computed deltas. Beehives and turtle egg nests report extra detail of their own.</td>
 </tr>
 <tr>
-<td style="border:1px solid #ccc;padding:6px;"><code style="background:#eee;padding:2px 4px;">/evercrops tick &lt;pos&gt;</code></td>
-<td style="border:1px solid #ccc;padding:6px;">Force a single random tick on the crop, so you can verify behavior without waiting.</td>
+<td style="border:1px solid #ccc;padding:6px;"><code style="background:#eee;padding:2px 4px;">/evercrops tick &lt;radius&gt;</code></td>
+<td style="border:1px solid #ccc;padding:6px;">Force a random tick on every tracked block within <code style="background:#eee;padding:2px 4px;">radius</code> (1&ndash;128) blocks of you, so you can verify behavior without waiting. Beehives are driven too.</td>
 </tr>
 <tr>
-<td style="border:1px solid #ccc;padding:6px;"><code style="background:#eee;padding:2px 4px;">/evercrops simulate &lt;pos&gt; &lt;ticks&gt;</code></td>
-<td style="border:1px solid #ccc;padding:6px;">Advance the crop's tracked &quot;last call&quot; and &quot;last growth&quot; times by a number of game ticks, then tick it &mdash; useful for testing how the catch-up math behaves over long absences.</td>
+<td style="border:1px solid #ccc;padding:6px;"><code style="background:#eee;padding:2px 4px;">/evercrops simulate &lt;ticks&gt; &lt;radius&gt;</code></td>
+<td style="border:1px solid #ccc;padding:6px;">Backdate the tracked times of everything within <code style="background:#eee;padding:2px 4px;">radius</code> by <code style="background:#eee;padding:2px 4px;">ticks</code> game ticks, then tick it &mdash; useful for testing how the catch-up math behaves over long absences.</td>
+</tr>
+<tr>
+<td style="border:1px solid #ccc;padding:6px;"><code style="background:#eee;padding:2px 4px;">/evercrops cleanup</code></td>
+<td style="border:1px solid #ccc;padding:6px;">Drop tracking entries in loaded chunks whose block is no longer a tracked crop or hive.</td>
 </tr>
 </tbody>
 </table>
@@ -114,6 +139,8 @@
 <h2 style="color:#4CAF50;">Companion mods</h2>
 
 <p>Pair with <a href="https://www.curseforge.com/minecraft/mc-mods/everfurnace"><strong>EverFurnace</strong></a> to give the same catch-up treatment to your furnaces, blast furnaces, and smokers.</p>
+
+<p>Pair with <a href="https://www.curseforge.com/minecraft/mc-mods/everhopper"><strong>EverHopper</strong></a> to give the same catch-up treatment to your hoppers.</p>
 
 <hr/>
 
