@@ -30,6 +30,7 @@
 <li>Potatoes</li>
 <li>Beetroots</li>
 <li>Torchflower</li>
+<li>Pitcher plant</li>
 <li>Melon stems (including fruit spread)</li>
 <li>Pumpkin stems (including fruit spread)</li>
 <li>Sweet berry bushes</li>
@@ -65,7 +66,7 @@
 
 <h2 style="color:#4CAF50;">Turtle eggs</h2>
 
-<p><strong>New:</strong> turtle eggs keep hatching while you're away. A nest sitting on sand carries on cracking, and eventually hatches into baby turtles &mdash; so a beach nest you left days ago won't be sitting exactly where you left it.</p>
+<p>Turtle eggs keep hatching while you're away. A nest sitting on sand carries on cracking, and eventually hatches into baby turtles &mdash; so a beach nest you left days ago won't be sitting exactly where you left it.</p>
 
 <ul>
 <li>One baby turtle per egg in the cluster, exactly like vanilla.</li>
@@ -73,6 +74,20 @@
 <li>Prefer not to come back to a crowd? <code style="background:#eee;padding:2px 4px;">turtleEggSpawnTurtles</code> lets eggs crack all the way while you're away, then wait for you to be nearby before actually hatching.</li>
 <li>Beaches can have a lot of wild nests, so by default only nests <strong>you placed</strong> are tracked &mdash; turn on <code style="background:#eee;padding:2px 4px;">trackWildTurtleEggs</code> to include wild ones.</li>
 <li>Toggle it with <code style="background:#eee;padding:2px 4px;">turtleEggsEnabled</code> (on by default).</li>
+</ul>
+
+<hr/>
+
+<h2 style="color:#4CAF50;">Budding amethyst</h2>
+
+<p><strong>New:</strong> budding amethyst keeps growing while you're away. Come back to an amethyst farm after a few days and the buds will have moved on &mdash; small grown to medium, medium to large, and large ones finished into full clusters ready to harvest.</p>
+
+<ul>
+<li>Follows the same small &rarr; medium &rarr; large &rarr; cluster progression as vanilla.</li>
+<li>Sides that are covered grow nothing, exactly like normal &mdash; a geode you've walled in stays as you left it.</li>
+<li>Covering some sides doesn't change how fast the ones still open grow &mdash; you just get buds in fewer places, exactly like vanilla.</li>
+<li><code style="background:#eee;padding:2px 4px;">/evercrops inspect</code> on a budding amethyst shows all six sides at a glance.</li>
+<li>Toggle it with <code style="background:#eee;padding:2px 4px;">amethystEnabled</code> (on by default).</li>
 </ul>
 
 <hr/>
@@ -115,7 +130,7 @@
 <tbody>
 <tr>
 <td style="border:1px solid #ccc;padding:6px;"><code style="background:#eee;padding:2px 4px;">/evercrops inspect [pos]</code></td>
-<td style="border:1px solid #ccc;padding:6px;">Print the tracked state at a position &mdash; or where you're standing, if you omit one: block, growth properties, last-call/last-growth game times, light levels, and computed deltas. Beehives and turtle egg nests report extra detail of their own.</td>
+<td style="border:1px solid #ccc;padding:6px;">Print the tracked state at a position &mdash; or where you're standing, if you omit one: block, growth properties, last-call/last-growth game times, light levels, and computed deltas. Beehives, turtle egg nests and budding amethyst report extra detail of their own.</td>
 </tr>
 <tr>
 <td style="border:1px solid #ccc;padding:6px;"><code style="background:#eee;padding:2px 4px;">/evercrops tick &lt;radius&gt;</code></td>

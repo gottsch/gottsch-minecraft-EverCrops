@@ -74,6 +74,8 @@ public final class EverCropsApi {
         @Override public int turtleEggHatchIntervalTicks() { return 32_000; }
         @Override public boolean turtleEggSpawnTurtles() { return true; }
         @Override public boolean trackWildTurtleEggs() { return false; }
+        @Override public boolean amethystEnabled() { return true; }
+        @Override public int amethystGrowthIntervalTicks() { return 6_750; }
         @Override public boolean moddedCropsEnabled() { return true; }
         @Override public boolean trackWildVines() { return false; }
         @Override public boolean autoCleanupEnabled() { return true; }
