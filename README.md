@@ -18,7 +18,7 @@ Note: in single-player worlds, time does not pass while you are not playing, so 
 
 | Category | Blocks |
 |---|---|
-| **Standard crops** | Wheat, carrots, potatoes, beetroot, torchflower |
+| **Standard crops** | Wheat, carrots, potatoes, beetroot, torchflower, pitcher plant |
 | **Stem crops** | Melon stems, pumpkin stems (including fruit spread) |
 | **Bush / special crops** | Sweet berry bushes, nether wart, cocoa pods |
 | **Column crops** | Sugar cane, cactus, kelp |
@@ -29,6 +29,7 @@ Note: in single-player worlds, time does not pass while you are not playing, so 
 | **Saplings** | Oak, birch, spruce, jungle, acacia, dark oak, cherry, mangrove |
 | **Beehives** | Beehives and bee nests (honey level; daytime only, per-hive learned rate) |
 | **Turtle eggs** | Turtle egg clusters on sand (crack, then hatch into one baby turtle per egg) |
+| **Budding amethyst** | Amethyst buds on each exposed face (small → medium → large → cluster) |
 
 Most modded crops that subclass any of the above vanilla classes are also supported automatically.
 
@@ -53,10 +54,12 @@ EverCrops adds a per-world server config (`serverconfig/evercrops-server.toml`) 
     chorusFlowerEnabled = true
     beehivesEnabled = true
     turtleEggsEnabled = true
+    amethystEnabled = true
 
     # Rate tuning
     beehiveHoneyIntervalTicks = 1500      # cold-start ticks per honey level, until a hive's own rate is learned
     turtleEggHatchIntervalTicks = 32000   # ticks per hatch stage (3 stages from fresh egg to turtles)
+    amethystGrowthIntervalTicks = 6750    # ticks per growth attempt; each attempt picks one of the six faces
 
     # Behaviour
     turtleEggSpawnTurtles = true          # false = crack eggs offline, but leave the hatch to vanilla

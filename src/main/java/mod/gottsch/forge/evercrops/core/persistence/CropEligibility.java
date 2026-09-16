@@ -25,6 +25,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.BambooSaplingBlock;
 import net.minecraft.world.level.block.BambooStalkBlock;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.BuddingAmethystBlock;
 import net.minecraft.world.level.block.CactusBlock;
 import net.minecraft.world.level.block.CaveVinesBlock;
 import net.minecraft.world.level.block.ChorusFlowerBlock;
@@ -32,6 +33,7 @@ import net.minecraft.world.level.block.CocoaBlock;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.KelpBlock;
 import net.minecraft.world.level.block.NetherWartBlock;
+import net.minecraft.world.level.block.PitcherCropBlock;
 import net.minecraft.world.level.block.SaplingBlock;
 import net.minecraft.world.level.block.StemBlock;
 import net.minecraft.world.level.block.SugarCaneBlock;
@@ -75,7 +77,7 @@ public final class CropEligibility {
     private CropEligibility() {}
 
     /** Toggle-routing category for a block state. {@code OTHER} = eligible but not a known vanilla category. */
-    public enum Category { CROPS, STEM, BUSH, COLUMN, SAPLING, BAMBOO, TWISTING, WEEPING, CAVE, CHORUS, EGGS, OTHER }
+    public enum Category { CROPS, STEM, BUSH, COLUMN, SAPLING, BAMBOO, TWISTING, WEEPING, CAVE, CHORUS, EGGS, AMETHYST, OTHER }
 
     // -------------------------------------------------
     // Capability (config-independent)
@@ -105,11 +107,12 @@ public final class CropEligibility {
     }
 
     /**
-     * Property-less transitional growables that have no growth axis to detect but are still tracked.
-     * Currently only {@link BambooSaplingBlock} (converts to a bamboo stalk on growth).
+     * Property-less growables that have no growth axis to detect but are still tracked:
+     * {@link BambooSaplingBlock} (converts to a bamboo stalk on growth) and
+     * {@link BuddingAmethystBlock} (grows buds on its neighbours, never changing its own state).
      */
     public static boolean isSupplementalEligible(Block block) {
-        return block instanceof BambooSaplingBlock;
+        return block instanceof BambooSaplingBlock || block instanceof BuddingAmethystBlock;
     }
 
     private static boolean isDenylisted(Block block) {
@@ -139,6 +142,10 @@ public final class CropEligibility {
     public static Category categoryOf(BlockState state) {
         Block block = state.getBlock();
         if (block instanceof CropBlock) return Category.CROPS;
+        // Pitcher plant is a farmland crop in every way a player cares about, but it extends
+        // DoublePlantBlock rather than CropBlock, so it needs naming here to reach cropsEnabled
+        // instead of falling through to OTHER/moddedCropsEnabled.
+        if (block instanceof PitcherCropBlock) return Category.CROPS;
         if (block instanceof StemBlock) return Category.STEM;
         if (block instanceof SweetBerryBushBlock
                 || block instanceof NetherWartBlock
@@ -155,6 +162,9 @@ public final class CropEligibility {
         // Incubating eggs (turtle eggs today; sniffer eggs share the same HATCH axis) grow on the
         // 'hatch' property rather than age/stage, but are otherwise ordinary random-tick growables.
         if (block instanceof TurtleEggBlock) return Category.EGGS;
+        // Budding amethyst grows on its neighbours rather than itself, so it has no growth property
+        // of its own and reaches eligibility through isSupplementalEligible instead.
+        if (block instanceof BuddingAmethystBlock) return Category.AMETHYST;
         return Category.OTHER;
     }
 
@@ -172,6 +182,7 @@ public final class CropEligibility {
             case CAVE     -> config.caveVinesEnabled();
             case CHORUS   -> config.chorusFlowerEnabled();
             case EGGS     -> config.turtleEggsEnabled();
+            case AMETHYST -> config.amethystEnabled();
             case OTHER    -> config.moddedCropsEnabled();
         };
     }

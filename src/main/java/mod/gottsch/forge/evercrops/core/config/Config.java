@@ -102,6 +102,8 @@ public final class Config {
         public final ModConfigSpec.IntValue     turtleEggHatchIntervalTicks;
         public final ModConfigSpec.BooleanValue turtleEggSpawnTurtles;
         public final ModConfigSpec.BooleanValue trackWildTurtleEggs;
+        public final ModConfigSpec.BooleanValue amethystEnabled;
+        public final ModConfigSpec.IntValue     amethystGrowthIntervalTicks;
         public final ModConfigSpec.BooleanValue moddedCropsEnabled;
         public final ModConfigSpec.ConfigValue<List<? extends String>> denylist;
         public final ModConfigSpec.BooleanValue trackWildVines;
@@ -113,7 +115,7 @@ public final class Config {
                    .push("crops");
 
             cropsEnabled = builder
-                    .comment("Enable catch-up growth for standard crops: wheat, carrots, potatoes, beetroot, torchflower, and modded subclasses.")
+                    .comment("Enable catch-up growth for standard crops: wheat, carrots, potatoes, beetroot, torchflower, pitcher plant, and modded subclasses.")
                     .define("cropsEnabled", true);
 
             stemCropsEnabled = builder
@@ -198,6 +200,20 @@ public final class Config {
                              "only placed clusters are tracked, which keeps the saved registry small near beaches. " +
                              "Set true if you want wild beach nests to hatch while you are away too.")
                     .define("trackWildTurtleEggs", false);
+
+            amethystEnabled = builder
+                    .comment("Enable catch-up growth for budding amethyst. When enabled, a budding amethyst block keeps " +
+                             "sprouting and advancing amethyst buds on its exposed faces based on how long the chunk was " +
+                             "unloaded, following the same small -> medium -> large -> cluster progression as vanilla. " +
+                             "Faces that are covered make no progress, matching vanilla.")
+                    .define("amethystEnabled", true);
+
+            amethystGrowthIntervalTicks = builder
+                    .comment("Assumed ticks between budding-amethyst growth attempts. Vanilla makes an attempt on about " +
+                             "1 in 5 random ticks (~6750 ticks at default randomTickSpeed), and each attempt targets one " +
+                             "randomly chosen face of the six - so one particular face advances roughly every 40000 ticks. " +
+                             "Lower = faster offline bud growth.")
+                    .defineInRange("amethystGrowthIntervalTicks", 6_750, 500, 500_000);
 
             moddedCropsEnabled = builder
                     .comment("Enable catch-up growth for modded growables that pass capability detection (a random-ticking block " +

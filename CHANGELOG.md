@@ -5,7 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [4.1.0] - Unreleased
+## [4.2.0] - 2026-09-16
+
+### Added
+
+- 💎 **Budding amethyst** now keeps growing while you're away. Leave an amethyst farm for a few days and you'll come back to buds that have moved on — small buds grown to medium, medium to large, and large ones finished into full clusters ready to harvest. Sides that are covered up still grow nothing, exactly like normal, so a geode you've walled in stays the way you left it. Covering some sides doesn't make the ones still open grow any faster or slower — you just get buds in fewer places, exactly like vanilla. Budding amethyst is always kept track of, since it's something you find in the world rather than something you can place yourself.
+- New **Budding amethyst** setting (`amethystEnabled`, on by default) to turn amethyst catch-up on or off, plus a setting to tune how fast buds grow while you're gone (`amethystGrowthIntervalTicks`).
+- `/evercrops inspect` on a budding amethyst now shows what's growing on each of its six sides, how many sides can still grow, and roughly how long the rest would take.
+- 🪻 **Pitcher plants** now grow while you're away, like every other crop. Until now a pitcher crop was being kept track of but never actually grew, so planting one and leaving meant coming back to the same little bulb you left. They now catch up the same way wheat and carrots do, including growing into their full two-block-tall form once they're far enough along. A pitcher crop with something directly above it grows as far as it can and then waits for room, same as normal.
+
+---
+
+## [4.1.0] - 2026-08-18
 
 ### Added
 
