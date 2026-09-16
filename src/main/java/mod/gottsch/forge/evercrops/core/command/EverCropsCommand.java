@@ -23,6 +23,8 @@ import com.mojang.brigadier.arguments.LongArgumentType;
 import mod.gottsch.forge.evercrops.api.BeehiveState;
 import mod.gottsch.forge.evercrops.api.CropBlockPredicates;
 import mod.gottsch.forge.evercrops.api.EverCropsApi;
+import mod.gottsch.forge.evercrops.core.catchup.AmethystDecision;
+import mod.gottsch.forge.evercrops.core.catchup.AmethystStrategy;
 import mod.gottsch.forge.evercrops.core.catchup.BeehiveCatchUp;
 import mod.gottsch.forge.evercrops.core.catchup.BeehiveDecision;
 import mod.gottsch.forge.evercrops.core.persistence.BeehiveRegistry;
@@ -35,11 +37,13 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.BeehiveBlock;
+import net.minecraft.world.level.block.BuddingAmethystBlock;
 import net.minecraft.world.level.block.TurtleEggBlock;
 import net.minecraft.world.level.block.entity.BeehiveBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -260,6 +264,12 @@ public class EverCropsCommand {
             inspectTurtleEggExtras(source, level, pos, blockState);
         }
 
+        // Budding amethyst has no growth property of its own — all its progress is on the six
+        // neighbouring faces, so the shared section above would show nothing useful without this.
+        if (blockState.getBlock() instanceof BuddingAmethystBlock) {
+            inspectAmethystExtras(source, level, pos);
+        }
+
         if (opt.isEmpty()) {
             source.sendSuccess(() -> Component.literal(
                     "  tracked            : no — no CropState recorded (not registered for catch-up)")
@@ -295,6 +305,54 @@ public class EverCropsCommand {
                 + "; per-crop interval varies, e.g. saplings need ~18900)")
                 .withStyle(wouldTrigger ? ChatFormatting.GREEN : ChatFormatting.GRAY), false);
         return 1;
+    }
+
+    // ------------------------------------------------------------------
+    // /evercrops inspect — amethyst supplement
+    // ------------------------------------------------------------------
+
+    /**
+     * Budding-amethyst inspect lines, printed above the shared CropState section: the configured
+     * pace and the live state of all six faces, which is where every bit of this block's progress
+     * actually lives.
+     */
+    private static void inspectAmethystExtras(CommandSourceStack source, ServerLevel level, BlockPos pos) {
+        int interval = EverCropsApi.config().amethystGrowthIntervalTicks();
+        int[] stages = AmethystStrategy.classifyFaces(level, pos);
+
+        source.sendSuccess(() -> Component.literal(
+                "  growth interval    : " + interval + " ticks per attempt"
+                + "  (~" + (interval * AmethystDecision.FACES) + " per specific face)")
+                .withStyle(ChatFormatting.WHITE), false);
+
+        int open = 0;
+        int rungsLeft = 0;
+        for (int i = 0; i < stages.length; i++) {
+            final Direction direction = Direction.values()[i];
+            final int stage = stages[i];
+            source.sendSuccess(() -> Component.literal(
+                    String.format("  face %-16s: %s", direction.getName(), AmethystStrategy.stageName(stage)))
+                    .withStyle(stage == AmethystDecision.BLOCKED ? ChatFormatting.GRAY : ChatFormatting.WHITE), false);
+            if (stage >= AmethystDecision.EMPTY && stage < AmethystDecision.CLUSTER) {
+                open++;
+                rungsLeft += AmethystDecision.CLUSTER - stage;
+            }
+        }
+
+        final int openFaces = open;
+        final int remaining = rungsLeft;
+        source.sendSuccess(() -> Component.literal(
+                "  open faces         : " + openFaces + " of " + AmethystDecision.FACES + " can still advance")
+                .withStyle(openFaces > 0 ? ChatFormatting.GREEN : ChatFormatting.GRAY), false);
+        if (remaining > 0) {
+            // Each remaining rung needs one attempt aimed at that face, so the expected wait is the
+            // attempt interval times the number of faces — the 1-in-6 pick, made visible.
+            long ticks = (long) remaining * interval * AmethystDecision.FACES / Math.max(1, openFaces);
+            source.sendSuccess(() -> Component.literal(
+                    "  est. time to full  : ~" + ticks + " ticks"
+                    + "  (~" + String.format("%.1f", ticks / 24000.0) + " in-game days) if left alone")
+                    .withStyle(ChatFormatting.WHITE), false);
+        }
     }
 
     // ------------------------------------------------------------------

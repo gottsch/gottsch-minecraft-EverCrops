@@ -76,6 +76,15 @@ public interface EverCropsConfigView {
 
     boolean trackWildTurtleEggs();
 
+    boolean amethystEnabled();
+
+    /**
+     * Assumed ticks between budding-amethyst growth attempts. Vanilla takes an attempt on about one
+     * random tick in five, and each attempt targets one randomly chosen face of six — so this is the
+     * pace of <i>opportunities</i>, not of any one face maturing. See {@code AmethystDecision}.
+     */
+    int amethystGrowthIntervalTicks();
+
     boolean moddedCropsEnabled();
 
     boolean trackWildVines();

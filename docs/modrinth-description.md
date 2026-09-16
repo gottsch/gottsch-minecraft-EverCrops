@@ -25,6 +25,7 @@ When a crop is placed, EverCrops registers it and stamps it with the current gam
 - 🥔 Potatoes
 - 🌱 Beetroots
 - 🔦 Torchflower
+- 🪻 Pitcher plant
 - 🍉 Melon stems (including fruit spread)
 - 🎃 Pumpkin stems (including fruit spread)
 - 🫐 Sweet berry bushes
@@ -57,13 +58,25 @@ Beehives and bee nests keep making honey while you're away, too. If a hive has b
 
 ## Turtle eggs
 
-**New:** turtle eggs keep hatching while you're away. A nest sitting on sand carries on cracking, and eventually hatches into baby turtles — so a beach nest you left days ago won't be sitting exactly where you left it.
+Turtle eggs keep hatching while you're away. A nest sitting on sand carries on cracking, and eventually hatches into baby turtles — so a beach nest you left days ago won't be sitting exactly where you left it.
 
 - 🐢 One baby turtle per egg in the cluster, exactly like vanilla
 - 🏖️ Eggs still need **sand** underneath — a nest that isn't on sand makes no progress, same as vanilla
 - 🐣 Prefer not to come back to a crowd? `turtleEggSpawnTurtles` lets eggs crack all the way while you're away, then wait for you to be nearby before actually hatching
 - 🥚 Beaches can have a lot of wild nests, so by default only nests **you placed** are tracked — turn on `trackWildTurtleEggs` to include wild ones
 - ⚙️ Toggle it with the `turtleEggsEnabled` setting (on by default)
+
+---
+
+## Budding amethyst
+
+**New:** budding amethyst keeps growing while you're away. Come back to an amethyst farm after a few days and the buds will have moved on — small grown to medium, medium to large, and large ones finished into full clusters ready to harvest.
+
+- 💎 Follows the same small → medium → large → cluster progression as vanilla
+- 🧱 Sides that are covered grow nothing, exactly like normal — a geode you've walled in stays as you left it
+- ⏳ Covering some sides doesn't change how fast the ones still open grow — you just get buds in fewer places, exactly like vanilla
+- 🔍 `/evercrops inspect` on a budding amethyst shows all six sides at a glance
+- ⚙️ Toggle it with the `amethystEnabled` setting (on by default)
 
 ---
 
@@ -93,7 +106,7 @@ EverCrops ships with admin/debug commands under `/evercrops` (requires op level 
 
 | Command | Purpose |
 | --- | --- |
-| `/evercrops inspect [pos]` | Print the tracked state at a position — or where you're standing, if you omit one: block, growth properties, last-call/last-growth game times, light levels, and computed deltas. Beehives and turtle egg nests report extra detail of their own. |
+| `/evercrops inspect [pos]` | Print the tracked state at a position — or where you're standing, if you omit one: block, growth properties, last-call/last-growth game times, light levels, and computed deltas. Beehives, turtle egg nests and budding amethyst report extra detail of their own. |
 | `/evercrops tick <radius>` | Force a random tick on every tracked block within `radius` (1–128) blocks of you, so you can verify behavior without waiting. Beehives are driven too. |
 | `/evercrops simulate <ticks> <radius>` | Backdate the tracked times of everything within `radius` by `ticks` game ticks, then tick it — useful for testing how the catch-up math behaves over long absences. |
 | `/evercrops cleanup` | Drop tracking entries in loaded chunks whose block is no longer a tracked crop or hive. |
