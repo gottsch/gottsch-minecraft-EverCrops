@@ -104,6 +104,8 @@ public final class Config {
         public final ModConfigSpec.BooleanValue trackWildTurtleEggs;
         public final ModConfigSpec.BooleanValue amethystEnabled;
         public final ModConfigSpec.IntValue     amethystGrowthIntervalTicks;
+        public final ModConfigSpec.BooleanValue copperEnabled;
+        public final ModConfigSpec.IntValue     copperOxidationIntervalTicks;
         public final ModConfigSpec.BooleanValue moddedCropsEnabled;
         public final ModConfigSpec.ConfigValue<List<? extends String>> denylist;
         public final ModConfigSpec.BooleanValue trackWildVines;
@@ -214,6 +216,20 @@ public final class Config {
                              "randomly chosen face of the six - so one particular face advances roughly every 40000 ticks. " +
                              "Lower = faster offline bud growth.")
                     .defineInRange("amethystGrowthIntervalTicks", 6_750, 500, 500_000);
+
+            copperEnabled = builder
+                    .comment("Enable catch-up oxidation for copper. When enabled, copper blocks keep weathering while their " +
+                             "chunk is unloaded, at the same rate vanilla would weather them - which depends on the copper " +
+                             "around them. Waxed copper never oxidizes, in vanilla or here.")
+                    .define("copperEnabled", true);
+
+            copperOxidationIntervalTicks = builder
+                    .comment("Assumed ticks between copper oxidation attempts. Vanilla makes an attempt on about 1 in 17.6 " +
+                             "random ticks (~23730 ticks at default randomTickSpeed). Each attempt then succeeds based on the " +
+                             "copper around that block, exactly as vanilla decides it - an isolated block oxidizes in roughly " +
+                             "32000 ticks, while one buried in same-age copper can take millions. Lower = faster offline " +
+                             "oxidation.")
+                    .defineInRange("copperOxidationIntervalTicks", 23_730, 1_000, 2_000_000);
 
             moddedCropsEnabled = builder
                     .comment("Enable catch-up growth for modded growables that pass capability detection (a random-ticking block " +

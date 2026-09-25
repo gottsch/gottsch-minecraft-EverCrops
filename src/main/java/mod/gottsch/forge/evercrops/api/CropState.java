@@ -38,6 +38,13 @@ public class CropState extends CatchUpState {
      */
     private int lastAge = -1;
 
+    /**
+     * Catch-up steps owed to this block but not yet usable, carried forward to later ticks. Only
+     * copper uses it today: an oxidation opportunity that a less-weathered neighbour blocked is kept
+     * here until that neighbour catches up, rather than being lost. {@code 0} for everything else.
+     */
+    private int bankedSteps;
+
     public CropState() {}
 
     @Override
@@ -79,6 +86,15 @@ public class CropState extends CatchUpState {
         return this;
     }
 
+    public int getBankedSteps() {
+        return bankedSteps;
+    }
+
+    public CropState setBankedSteps(int bankedSteps) {
+        this.bankedSteps = Math.max(0, bankedSteps);
+        return this;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
@@ -86,13 +102,14 @@ public class CropState extends CatchUpState {
         CropState cropState = (CropState) o;
         return lastCallLightLevel == cropState.lastCallLightLevel
                 && lastGrowthLightLevel == cropState.lastGrowthLightLevel
-                && lastAge == cropState.lastAge;
+                && lastAge == cropState.lastAge
+                && bankedSteps == cropState.bankedSteps;
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(getLastCallGameTime(), getLastGrowthGameTime(),
-                lastCallLightLevel, lastGrowthLightLevel, lastAge);
+                lastCallLightLevel, lastGrowthLightLevel, lastAge, bankedSteps);
     }
 
     @Override
@@ -103,6 +120,7 @@ public class CropState extends CatchUpState {
                 ", lastCallLightLevel=" + lastCallLightLevel +
                 ", lastGrowthLightLevel=" + lastGrowthLightLevel +
                 ", lastAge=" + lastAge +
+                ", bankedSteps=" + bankedSteps +
                 '}';
     }
 }

@@ -12,6 +12,7 @@
     "BuddingAmethystBlockMixin",
     "CactusBlockMixin",
     "CaveVinesBlockMixin",
+    "ChangeOverTimeBlockMixin",
     "ChorusFlowerBlockMixin",
     "CocoaBlockMixin",
     "CropBlockMixin",
