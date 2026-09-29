@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [4.3.0] - Unreleased
+## [4.3.0] - 2026-09-25
 
 ### Added
 
@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Waxed copper still never changes.** If you want to keep a copper build looking exactly the way you built it, wax it with honeycomb, same as always.
 - New **Copper** setting (`copperEnabled`, on by default) to turn copper catch-up off if you'd rather copper only weathers while you're nearby, plus a setting to tune how fast it happens (`copperOxidationIntervalTicks`).
 - `/evercrops inspect` on a copper block now shows how weathered it is, how much copper is around it, how likely it is to change, roughly how long that will take, and whether a less-weathered block nearby is holding it back.
+
+### Fixed
+
+- Crops, saplings, eggs and amethyst that you were standing right next to could sometimes get a bonus burst of "while you were away" growth even though you never left. Over time this made things near you grow about a third faster than normal. EverCrops now only catches up on growth when an area has really been unloaded, so anything near you grows at exactly the normal speed.
 
 ---
 

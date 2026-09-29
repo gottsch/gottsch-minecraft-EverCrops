@@ -80,7 +80,6 @@ import java.util.stream.Collectors;
  */
 public class EverCropsCommand {
 
-    private static final int AVG_CALL_TICK_INTERVAL  = 1350;
     private static final int AVG_GROWTH_TICK_INTERVAL = 7000;
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -290,7 +289,9 @@ public class EverCropsCommand {
         long now = level.getGameTime();
         long callDelta   = now - state.getLastCallGameTime();
         long growthDelta = now - state.getLastGrowthGameTime();
-        boolean wouldTrigger = callDelta > AVG_CALL_TICK_INTERVAL * 2L
+        // Mirrors CatchUpDecision: the gap since the last call must itself be long enough to be an
+        // absence, not just the growth clock.
+        boolean wouldTrigger = callDelta > AVG_GROWTH_TICK_INTERVAL * 2L
                             && growthDelta > AVG_GROWTH_TICK_INTERVAL * 2L;
 
         source.sendSuccess(() -> Component.literal(
@@ -309,7 +310,7 @@ public class EverCropsCommand {
                 .withStyle(ChatFormatting.WHITE), false);
         source.sendSuccess(() -> Component.literal(
                 "  offline growth?    : " + (wouldTrigger ? "YES" : "no")
-                + "  (approx — need callDelta>" + (AVG_CALL_TICK_INTERVAL * 2)
+                + "  (approx — need callDelta>" + (AVG_GROWTH_TICK_INTERVAL * 2)
                 + " growthDelta>" + (AVG_GROWTH_TICK_INTERVAL * 2)
                 + "; per-crop interval varies, e.g. saplings need ~18900)")
                 .withStyle(wouldTrigger ? ChatFormatting.GREEN : ChatFormatting.GRAY), false);
