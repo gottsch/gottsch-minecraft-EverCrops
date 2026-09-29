@@ -74,7 +74,9 @@ public class CropSavedData extends SavedData {
                  .setLastCallLightLevel(entry.getInt("lastCallLight"))
                  .setLastGrowthLightLevel(entry.getInt("lastGrowthLight"))
                  // Pre-existing saves have no lastAge; -1 = "not yet observed".
-                 .setLastAge(entry.contains("lastAge") ? entry.getInt("lastAge") : -1);
+                 .setLastAge(entry.contains("lastAge") ? entry.getInt("lastAge") : -1)
+                 // Absent for almost every entry — only written when non-zero (see save).
+                 .setBankedSteps(entry.getInt("bankedSteps"));
             data.crops.put(posKey, state);
         }
         return data;
@@ -92,6 +94,9 @@ public class CropSavedData extends SavedData {
             e.putInt("lastCallLight", s.getLastCallLightLevel());
             e.putInt("lastGrowthLight", s.getLastGrowthLightLevel());
             e.putInt("lastAge", s.getLastAge());
+            if (s.getBankedSteps() > 0) {
+                e.putInt("bankedSteps", s.getBankedSteps());
+            }
             list.add(e);
         }
         tag.put("crops", list);

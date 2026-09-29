@@ -85,6 +85,15 @@ public interface EverCropsConfigView {
      */
     int amethystGrowthIntervalTicks();
 
+    boolean copperEnabled();
+
+    /**
+     * Assumed ticks between copper oxidation attempts. Each attempt then succeeds or not based on the
+     * surrounding copper, rolled live — so this is the pace of <i>opportunities</i>, not of any block
+     * actually oxidizing. See {@code CopperDecision}.
+     */
+    int copperOxidationIntervalTicks();
+
     boolean moddedCropsEnabled();
 
     boolean trackWildVines();

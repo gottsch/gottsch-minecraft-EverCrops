@@ -25,6 +25,8 @@ import mod.gottsch.forge.evercrops.api.CropBlockPredicates;
 import mod.gottsch.forge.evercrops.api.EverCropsApi;
 import mod.gottsch.forge.evercrops.core.catchup.AmethystDecision;
 import mod.gottsch.forge.evercrops.core.catchup.AmethystStrategy;
+import mod.gottsch.forge.evercrops.core.catchup.CopperDecision;
+import mod.gottsch.forge.evercrops.core.catchup.CopperStrategy;
 import mod.gottsch.forge.evercrops.core.catchup.BeehiveCatchUp;
 import mod.gottsch.forge.evercrops.core.catchup.BeehiveDecision;
 import mod.gottsch.forge.evercrops.core.persistence.BeehiveRegistry;
@@ -44,6 +46,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.BeehiveBlock;
 import net.minecraft.world.level.block.BuddingAmethystBlock;
+import net.minecraft.world.level.block.ChangeOverTimeBlock;
 import net.minecraft.world.level.block.TurtleEggBlock;
 import net.minecraft.world.level.block.entity.BeehiveBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -77,7 +80,6 @@ import java.util.stream.Collectors;
  */
 public class EverCropsCommand {
 
-    private static final int AVG_CALL_TICK_INTERVAL  = 1350;
     private static final int AVG_GROWTH_TICK_INTERVAL = 7000;
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -270,6 +272,12 @@ public class EverCropsCommand {
             inspectAmethystExtras(source, level, pos);
         }
 
+        // Copper's stage is the block itself, and its pace depends entirely on the copper around it,
+        // so the neighbourhood is the whole answer to "why is / isn't this oxidizing?".
+        if (blockState.getBlock() instanceof ChangeOverTimeBlock<?> copper) {
+            inspectCopperExtras(source, level, pos, blockState, copper);
+        }
+
         if (opt.isEmpty()) {
             source.sendSuccess(() -> Component.literal(
                     "  tracked            : no — no CropState recorded (not registered for catch-up)")
@@ -281,7 +289,9 @@ public class EverCropsCommand {
         long now = level.getGameTime();
         long callDelta   = now - state.getLastCallGameTime();
         long growthDelta = now - state.getLastGrowthGameTime();
-        boolean wouldTrigger = callDelta > AVG_CALL_TICK_INTERVAL * 2L
+        // Mirrors CatchUpDecision: the gap since the last call must itself be long enough to be an
+        // absence, not just the growth clock.
+        boolean wouldTrigger = callDelta > AVG_GROWTH_TICK_INTERVAL * 2L
                             && growthDelta > AVG_GROWTH_TICK_INTERVAL * 2L;
 
         source.sendSuccess(() -> Component.literal(
@@ -300,7 +310,7 @@ public class EverCropsCommand {
                 .withStyle(ChatFormatting.WHITE), false);
         source.sendSuccess(() -> Component.literal(
                 "  offline growth?    : " + (wouldTrigger ? "YES" : "no")
-                + "  (approx — need callDelta>" + (AVG_CALL_TICK_INTERVAL * 2)
+                + "  (approx — need callDelta>" + (AVG_GROWTH_TICK_INTERVAL * 2)
                 + " growthDelta>" + (AVG_GROWTH_TICK_INTERVAL * 2)
                 + "; per-crop interval varies, e.g. saplings need ~18900)")
                 .withStyle(wouldTrigger ? ChatFormatting.GREEN : ChatFormatting.GRAY), false);
@@ -353,6 +363,62 @@ public class EverCropsCommand {
                     + "  (~" + String.format("%.1f", ticks / 24000.0) + " in-game days) if left alone")
                     .withStyle(ChatFormatting.WHITE), false);
         }
+    }
+
+    // ------------------------------------------------------------------
+    // /evercrops inspect — copper supplement
+    // ------------------------------------------------------------------
+
+    /**
+     * Copper inspect lines, printed above the shared CropState section: the stage, the live
+     * neighbourhood count vanilla bases its roll on, and the resulting chance and expected pace.
+     */
+    private static void inspectCopperExtras(CommandSourceStack source, ServerLevel level, BlockPos pos,
+                                            BlockState blockState, ChangeOverTimeBlock<?> copper) {
+        int interval = EverCropsApi.config().copperOxidationIntervalTicks();
+        String stage = copper.getAge().name().toLowerCase(java.util.Locale.ROOT);
+        String nextStage = copper.getNext(blockState)
+                .map(s -> s.getBlock() instanceof ChangeOverTimeBlock<?> n
+                        ? n.getAge().name().toLowerCase(java.util.Locale.ROOT) : "?")
+                .orElse("(fully oxidized)");
+        source.sendSuccess(() -> Component.literal(
+                "  weather state      : " + stage + "  ->  " + nextStage)
+                .withStyle(ChatFormatting.WHITE), false);
+
+        CopperStrategy.Neighbourhood around = CopperStrategy.scan(level, pos, copper);
+        source.sendSuccess(() -> Component.literal(
+                "  copper neighbours  : " + around.sameAge() + " same age, " + around.moreOxidized()
+                + " more oxidized, " + around.lessOxidized() + " less oxidized  (within "
+                + CopperDecision.SCAN_DISTANCE + " blocks)")
+                .withStyle(ChatFormatting.WHITE), false);
+
+        float modifier = copper.getChanceModifier();
+        float chance = CopperDecision.advanceChance(around.moreOxidized(), around.sameAge(), modifier);
+        float f = (float) Math.sqrt(chance / modifier);
+        source.sendSuccess(() -> Component.literal(
+                String.format("  oxidize chance     : %.4g per attempt  (f=%.3f, modifier %.2f)", chance, f, modifier))
+                .withStyle(ChatFormatting.WHITE), false);
+        source.sendSuccess(() -> Component.literal(
+                "  attempt interval   : " + interval + " ticks")
+                .withStyle(ChatFormatting.WHITE), false);
+        long expected = CopperDecision.expectedIntervalTicks(chance, interval);
+        source.sendSuccess(() -> Component.literal(
+                "  expected interval  : ~" + expected + " ticks  (~"
+                + String.format("%.1f", expected / 24000.0) + " in-game days) at this chance")
+                .withStyle(ChatFormatting.WHITE), false);
+
+        boolean blocked = CopperDecision.isBlockedByNeighbour(around.lessOxidized());
+        source.sendSuccess(() -> Component.literal(blocked
+                ? "  blocked?           : YES — a less weathered copper block within "
+                    + CopperDecision.SCAN_DISTANCE + " blocks stops this one (vanilla rule)"
+                : "  blocked?           : no")
+                .withStyle(blocked ? ChatFormatting.YELLOW : ChatFormatting.GREEN), false);
+
+        int banked = CropRegistry.get(level, pos).map(CropState::getBankedSteps).orElse(0);
+        source.sendSuccess(() -> Component.literal(
+                "  banked attempts    : " + banked
+                + (banked > 0 ? "  (waiting for the less weathered neighbour to catch up)" : ""))
+                .withStyle(banked > 0 ? ChatFormatting.YELLOW : ChatFormatting.GRAY), false);
     }
 
     // ------------------------------------------------------------------

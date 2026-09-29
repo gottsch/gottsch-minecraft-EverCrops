@@ -80,7 +80,7 @@
 
 <h2 style="color:#4CAF50;">Budding amethyst</h2>
 
-<p><strong>New:</strong> budding amethyst keeps growing while you're away. Come back to an amethyst farm after a few days and the buds will have moved on &mdash; small grown to medium, medium to large, and large ones finished into full clusters ready to harvest.</p>
+<p>Budding amethyst keeps growing while you're away. Come back to an amethyst farm after a few days and the buds will have moved on &mdash; small grown to medium, medium to large, and large ones finished into full clusters ready to harvest.</p>
 
 <ul>
 <li>Follows the same small &rarr; medium &rarr; large &rarr; cluster progression as vanilla.</li>
@@ -88,6 +88,21 @@
 <li>Covering some sides doesn't change how fast the ones still open grow &mdash; you just get buds in fewer places, exactly like vanilla.</li>
 <li><code style="background:#eee;padding:2px 4px;">/evercrops inspect</code> on a budding amethyst shows all six sides at a glance.</li>
 <li>Toggle it with <code style="background:#eee;padding:2px 4px;">amethystEnabled</code> (on by default).</li>
+</ul>
+
+<hr/>
+
+<h2 style="color:#4CAF50;">Copper</h2>
+
+<p><strong>New:</strong> copper keeps weathering while you're away. Copper slowly goes from shiny to exposed, to weathered, and finally to fully green oxidized &mdash; and now that carries on while you're gone instead of freezing the moment you leave.</p>
+
+<ul>
+<li>Every kind of weathering copper block: full, cut, slabs and stairs &mdash; plus, on 1.21.1, chiseled copper, doors, trapdoors, grates and bulbs.</li>
+<li>Weathers at exactly the vanilla speed, which depends on what's around it &mdash; a lone copper block changes fairly quickly, copper packed into a big wall of the same shade changes very slowly.</li>
+<li>Just like normal, a copper block never gets ahead of a less-weathered copper block right next to it.</li>
+<li><strong>Waxed copper never changes</strong> &mdash; wax a build with honeycomb to keep it exactly as you built it.</li>
+<li><code style="background:#eee;padding:2px 4px;">/evercrops inspect</code> on a copper block shows how much copper is around it, how likely it is to change, and whether a less-weathered neighbour is holding it back.</li>
+<li>Toggle it with <code style="background:#eee;padding:2px 4px;">copperEnabled</code> (on by default).</li>
 </ul>
 
 <hr/>
@@ -130,7 +145,7 @@
 <tbody>
 <tr>
 <td style="border:1px solid #ccc;padding:6px;"><code style="background:#eee;padding:2px 4px;">/evercrops inspect [pos]</code></td>
-<td style="border:1px solid #ccc;padding:6px;">Print the tracked state at a position &mdash; or where you're standing, if you omit one: block, growth properties, last-call/last-growth game times, light levels, and computed deltas. Beehives, turtle egg nests and budding amethyst report extra detail of their own.</td>
+<td style="border:1px solid #ccc;padding:6px;">Print the tracked state at a position &mdash; or where you're standing, if you omit one: block, growth properties, last-call/last-growth game times, light levels, and computed deltas. Beehives, turtle egg nests, budding amethyst and copper report extra detail of their own.</td>
 </tr>
 <tr>
 <td style="border:1px solid #ccc;padding:6px;"><code style="background:#eee;padding:2px 4px;">/evercrops tick &lt;radius&gt;</code></td>

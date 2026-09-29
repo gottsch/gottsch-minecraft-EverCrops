@@ -27,6 +27,7 @@
     "SweetBerryBushBlockMixin",
     "TurtleEggBlockMixin",
     "TwistingVinesBlockMixin",
+    "WeatheringCopperBlockMixin",
     "WeepingVinesBlockMixin"
   ],
   "injectors": {

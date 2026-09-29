@@ -70,13 +70,26 @@ Turtle eggs keep hatching while you're away. A nest sitting on sand carries on c
 
 ## Budding amethyst
 
-**New:** budding amethyst keeps growing while you're away. Come back to an amethyst farm after a few days and the buds will have moved on — small grown to medium, medium to large, and large ones finished into full clusters ready to harvest.
+Budding amethyst keeps growing while you're away. Come back to an amethyst farm after a few days and the buds will have moved on — small grown to medium, medium to large, and large ones finished into full clusters ready to harvest.
 
 - 💎 Follows the same small → medium → large → cluster progression as vanilla
 - 🧱 Sides that are covered grow nothing, exactly like normal — a geode you've walled in stays as you left it
 - ⏳ Covering some sides doesn't change how fast the ones still open grow — you just get buds in fewer places, exactly like vanilla
 - 🔍 `/evercrops inspect` on a budding amethyst shows all six sides at a glance
 - ⚙️ Toggle it with the `amethystEnabled` setting (on by default)
+
+---
+
+## Copper
+
+**New:** copper keeps weathering while you're away. Copper slowly goes from shiny to exposed, to weathered, and finally to fully green oxidized — and now that carries on while you're gone instead of freezing the moment you leave.
+
+- 🟫 Every kind of weathering copper block: full, cut, slabs and stairs — plus, on 1.21.1, chiseled copper, doors, trapdoors, grates and bulbs
+- 🧭 Weathers at exactly the vanilla speed, which depends on what's around it — a lone copper block changes fairly quickly, copper packed into a big wall of the same shade changes very slowly
+- 🧱 Just like normal, a copper block never gets ahead of a less-weathered copper block right next to it
+- 🍯 **Waxed copper never changes** — wax a build with honeycomb to keep it exactly as you built it
+- 🔍 `/evercrops inspect` on a copper block shows how much copper is around it, how likely it is to change, and whether a less-weathered neighbour is holding it back
+- ⚙️ Toggle it with the `copperEnabled` setting (on by default)
 
 ---
 
@@ -106,7 +119,7 @@ EverCrops ships with admin/debug commands under `/evercrops` (requires op level 
 
 | Command | Purpose |
 | --- | --- |
-| `/evercrops inspect [pos]` | Print the tracked state at a position — or where you're standing, if you omit one: block, growth properties, last-call/last-growth game times, light levels, and computed deltas. Beehives, turtle egg nests and budding amethyst report extra detail of their own. |
+| `/evercrops inspect [pos]` | Print the tracked state at a position — or where you're standing, if you omit one: block, growth properties, last-call/last-growth game times, light levels, and computed deltas. Beehives, turtle egg nests, budding amethyst and copper report extra detail of their own. |
 | `/evercrops tick <radius>` | Force a random tick on every tracked block within `radius` (1–128) blocks of you, so you can verify behavior without waiting. Beehives are driven too. |
 | `/evercrops simulate <ticks> <radius>` | Backdate the tracked times of everything within `radius` by `ticks` game ticks, then tick it — useful for testing how the catch-up math behaves over long absences. |
 | `/evercrops cleanup` | Drop tracking entries in loaded chunks whose block is no longer a tracked crop or hive. |
