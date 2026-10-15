@@ -82,7 +82,7 @@ Budding amethyst keeps growing while you're away. Come back to an amethyst farm 
 
 ## Copper
 
-**New:** copper keeps weathering while you're away. Copper slowly goes from shiny to exposed, to weathered, and finally to fully green oxidized — and now that carries on while you're gone instead of freezing the moment you leave.
+Copper keeps weathering while you're away. Copper slowly goes from shiny to exposed, to weathered, and finally to fully green oxidized — and now that carries on while you're gone instead of freezing the moment you leave.
 
 - 🟫 Every kind of weathering copper block: full, cut, slabs and stairs — plus, on 1.21.1, chiseled copper, doors, trapdoors, grates and bulbs
 - 🧭 Weathers at exactly the vanilla speed, which depends on what's around it — a lone copper block changes fairly quickly, copper packed into a big wall of the same shade changes very slowly
@@ -93,9 +93,21 @@ Budding amethyst keeps growing while you're away. Come back to an amethyst farm 
 
 ---
 
+## Sniffer eggs and frogspawn
+
+**New:** sniffer eggs and frogspawn keep hatching while you're away. Until now their countdown simply stopped whenever you left — come back days later and the egg hadn't moved. Now it carries on.
+
+- 🥚 A sniffer egg cracks, cracks again, and hatches into a baby sniffer on exactly the schedule it would have followed if you'd stayed — about a day, or half that on moss
+- 🐸 Frogspawn hatches into tadpoles on its normal schedule too
+- 🌍 Works on eggs and frogspawn already in your world before you updated, and nothing extra is saved to keep track of them
+- 🔍 `/evercrops inspect` shows how far along it is, how long until its next step, and how much time away it was given
+- ⚙️ Toggle them with the `snifferEggsEnabled` and `frogspawnEnabled` settings (both on by default)
+
+---
+
 ## Compatibility
 
-EverCrops uses **only** `@Inject`, `@Accessor`, and `@Invoker` mixins — no overwrites, no replacements. It introduces **no custom blocks and no block entities**. This makes it broadly compatible with other mixin-based mods and means uninstalling it is safe: your world keeps all its existing crops, they just go back to vanilla behavior.
+EverCrops uses **only** `@Inject`, `@ModifyArg`, `@Accessor`, and `@Invoker` mixins — no overwrites, no replacements. It introduces **no custom blocks and no block entities**. This makes it broadly compatible with other mixin-based mods and means uninstalling it is safe: your world keeps all its existing crops, they just go back to vanilla behavior.
 
 - ✅ Server-side friendly (clients don't need it installed for the growth logic to work)
 - ✅ No worldgen changes
@@ -119,7 +131,7 @@ EverCrops ships with admin/debug commands under `/evercrops` (requires op level 
 
 | Command | Purpose |
 | --- | --- |
-| `/evercrops inspect [pos]` | Print the tracked state at a position — or where you're standing, if you omit one: block, growth properties, last-call/last-growth game times, light levels, and computed deltas. Beehives, turtle egg nests, budding amethyst and copper report extra detail of their own. |
+| `/evercrops inspect [pos]` | Print the tracked state at a position — or where you're standing, if you omit one: block, growth properties, last-call/last-growth game times, light levels, and computed deltas. Beehives, turtle egg nests, budding amethyst, copper, sniffer eggs and frogspawn report extra detail of their own. |
 | `/evercrops tick <radius>` | Force a random tick on every tracked block within `radius` (1–128) blocks of you, so you can verify behavior without waiting. Beehives are driven too. |
 | `/evercrops simulate <ticks> <radius>` | Backdate the tracked times of everything within `radius` by `ticks` game ticks, then tick it — useful for testing how the catch-up math behaves over long absences. |
 | `/evercrops cleanup` | Drop tracking entries in loaded chunks whose block is no longer a tracked crop or hive. |

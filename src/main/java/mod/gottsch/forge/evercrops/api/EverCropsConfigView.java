@@ -94,6 +94,15 @@ public interface EverCropsConfigView {
      */
     int copperOxidationIntervalTicks();
 
+    /**
+     * Sniffer eggs keep hatching while their chunk is unloaded. They grow on a scheduled tick, not a
+     * random one, so they need no interval: the real schedule is restored exactly.
+     */
+    boolean snifferEggsEnabled();
+
+    /** Frogspawn keeps counting down to hatching while its chunk is unloaded. See {@link #snifferEggsEnabled()}. */
+    boolean frogspawnEnabled();
+
     boolean moddedCropsEnabled();
 
     boolean trackWildVines();
