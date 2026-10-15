@@ -29,6 +29,7 @@ import mod.gottsch.forge.evercrops.core.catchup.CopperDecision;
 import mod.gottsch.forge.evercrops.core.catchup.CopperStrategy;
 import mod.gottsch.forge.evercrops.core.catchup.BeehiveCatchUp;
 import mod.gottsch.forge.evercrops.core.catchup.BeehiveDecision;
+import mod.gottsch.forge.evercrops.core.catchup.ScheduledCatchUp;
 import mod.gottsch.forge.evercrops.core.persistence.BeehiveRegistry;
 import mod.gottsch.forge.evercrops.core.persistence.BeehiveSavedData;
 import mod.gottsch.forge.evercrops.core.persistence.CropRegistry;
@@ -47,6 +48,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.BeehiveBlock;
 import net.minecraft.world.level.block.BuddingAmethystBlock;
 import net.minecraft.world.level.block.ChangeOverTimeBlock;
+import net.minecraft.world.level.block.SnifferEggBlock;
 import net.minecraft.world.level.block.TurtleEggBlock;
 import net.minecraft.world.level.block.entity.BeehiveBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -55,6 +57,7 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.stream.Collectors;
 
 /**
@@ -63,6 +66,8 @@ import java.util.stream.Collectors;
  * /evercrops simulate <ticks>        – backdate all CropState entries in the current
  *                                       dimension; the next randomTick on each crop
  *                                       will immediately enter the offline-growth path.
+ *                                       Sniffer eggs and frogspawn in range are caught
+ *                                       up straight away instead (no registry entry).
  *
  * /evercrops tick <radius>           – force a randomTick on every tracked crop within
  *                                       <radius> blocks of the player, triggering growth
@@ -163,6 +168,9 @@ public class EverCropsCommand {
         CropSavedData data = CropSavedData.getOrCreate(level);
         int count = data.backdateInRadius(origin, radius, ticks);
         int hiveCount = BeehiveSavedData.getOrCreate(level).backdateInRadius(origin, radius, ticks);
+        // Sniffer eggs and frogspawn are not in the registry: their live scheduled tick is pulled
+        // forward instead, exactly as a real reload would, so they catch up on their own.
+        int scheduledCount = ScheduledCatchUp.simulate(level, origin, radius, ticks);
 
         double minutes = ticks / 1200.0;
         source.sendSuccess(() -> Component.literal(
@@ -170,7 +178,13 @@ public class EverCropsCommand {
                               "Use '/evercrops tick <radius>' to apply growth immediately.",
                         count, hiveCount, ticks, minutes, radius))
                 .withStyle(ChatFormatting.GREEN), false);
-        return count + hiveCount;
+        if (scheduledCount > 0) {
+            source.sendSuccess(() -> Component.literal(
+                    String.format("Caught up %d sniffer egg / frogspawn block%s by %d ticks; they update on their own.",
+                            scheduledCount, scheduledCount == 1 ? "" : "s", ticks))
+                    .withStyle(ChatFormatting.GREEN), false);
+        }
+        return count + hiveCount + scheduledCount;
     }
 
     // ------------------------------------------------------------------
@@ -258,6 +272,13 @@ public class EverCropsCommand {
         // own store — report that instead of the crop section.
         if (blockState.getBlock() instanceof BeehiveBlock) {
             return inspectBeehive(source, level, pos, blockState);
+        }
+
+        // Sniffer eggs and frogspawn are never in the registry — their catch-up works off the chunk's
+        // save time and the block's own scheduled tick, so report those instead.
+        ScheduledCatchUp.Kind scheduledKind = ScheduledCatchUp.kindOf(blockState.getBlock());
+        if (scheduledKind != null) {
+            return inspectScheduled(source, level, pos, blockState, scheduledKind);
         }
 
         // Turtle eggs ride the ordinary crop store, so they fall through to the CropState section
@@ -452,6 +473,61 @@ public class EverCropsCommand {
                 "  may spawn turtles  : " + (EverCropsApi.config().turtleEggSpawnTurtles()
                         ? "yes" : "no — catch-up stops at fully cracked (turtleEggSpawnTurtles = false)"))
                 .withStyle(ChatFormatting.WHITE), false);
+    }
+
+    // ------------------------------------------------------------------
+    // /evercrops inspect — sniffer egg / frogspawn branch
+    // ------------------------------------------------------------------
+
+    /**
+     * Inspect output for blocks caught up on their scheduled tick: the stage, the moss boost, when the
+     * pending tick fires, how much time away this chunk was credited on its last reload, and any time
+     * still owed to the following stages.
+     */
+    private static int inspectScheduled(CommandSourceStack source, ServerLevel level, BlockPos pos,
+                                        BlockState blockState, ScheduledCatchUp.Kind kind) {
+        boolean enabled = kind.isEnabled();
+        String toggle = kind == ScheduledCatchUp.Kind.SNIFFER_EGG ? "snifferEggsEnabled" : "frogspawnEnabled";
+        source.sendSuccess(() -> Component.literal(
+                "  catch-up enabled   : " + (enabled ? "yes" : "no — " + toggle + " = false"))
+                .withStyle(enabled ? ChatFormatting.GREEN : ChatFormatting.RED), false);
+
+        if (kind == ScheduledCatchUp.Kind.SNIFFER_EGG) {
+            int hatch = blockState.getValue(SnifferEggBlock.HATCH);
+            boolean boosted = SnifferEggBlock.hatchBoost(level, pos);
+            source.sendSuccess(() -> Component.literal(
+                    "  hatch stage        : " + hatch + " of " + SnifferEggBlock.MAX_HATCH_LEVEL
+                    + "  (" + (SnifferEggBlock.MAX_HATCH_LEVEL + 1 - hatch) + " step(s) to a baby sniffer)")
+                    .withStyle(ChatFormatting.WHITE), false);
+            source.sendSuccess(() -> Component.literal(
+                    "  on moss            : " + (boosted ? "yes — stages take half as long" : "no"))
+                    .withStyle(ChatFormatting.WHITE), false);
+        }
+
+        OptionalLong next = ScheduledCatchUp.ticksUntilNext(level, pos, blockState.getBlock());
+        source.sendSuccess(() -> Component.literal(
+                "  next step in       : " + (next.isPresent()
+                        ? next.getAsLong() + " ticks (~" + String.format("%.1f", next.getAsLong() / 1200.0) + " min)"
+                        : "no pending tick"))
+                .withStyle(next.isPresent() ? ChatFormatting.WHITE : ChatFormatting.YELLOW), false);
+
+        long owed = ScheduledCatchUp.owedBudget(level, pos);
+        if (owed > 0) {
+            source.sendSuccess(() -> Component.literal(
+                    "  still owed         : " + owed + " ticks — later stages will follow a tick apart")
+                    .withStyle(ChatFormatting.GREEN), false);
+        }
+
+        long credited = ScheduledCatchUp.creditedAbsence(level, pos);
+        source.sendSuccess(() -> Component.literal(
+                "  chunk last away    : " + (credited > 0
+                        ? credited + " ticks (~" + String.format("%.1f", credited / 1200.0) + " min), credited on reload"
+                        : "nothing credited since it loaded"))
+                .withStyle(ChatFormatting.WHITE), false);
+        source.sendSuccess(() -> Component.literal(
+                "  tracked            : not needed — uses the chunk's own save time")
+                .withStyle(ChatFormatting.GRAY), false);
+        return 1;
     }
 
     // ------------------------------------------------------------------

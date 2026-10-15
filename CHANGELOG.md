@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.4.0] - 2026-10-15
+
+### Added
+
+- 🥚 **Sniffer eggs** now keep hatching while you're away. Until now a sniffer egg's countdown simply stopped whenever you left, so you could come back days later to an egg that hadn't moved at all. Now it carries on: leave an egg for a day and you'll come back to a baby sniffer. It hatches on exactly the schedule it would have followed if you'd stayed, including hatching twice as fast on moss.
+- 🐸 **Frogspawn** now keeps counting down while you're away too, and hatches into tadpoles on the same schedule it would have if you'd stayed nearby.
+- Works on eggs and frogspawn that were already in your world before you updated, and EverCrops doesn't need to save anything extra to keep track of them.
+- New **Sniffer eggs** setting (`snifferEggsEnabled`, on by default) and **Frogspawn** setting (`frogspawnEnabled`, on by default) to turn either one off.
+- `/evercrops inspect` on a sniffer egg or frogspawn now shows how far along it is, whether moss is speeding it up, how long until its next step, and how much time away it was given when you came back.
+- `/evercrops simulate` now fast-forwards nearby sniffer eggs and frogspawn too.
+
+---
+
 ## [4.3.0] - 2026-09-25
 
 ### Added

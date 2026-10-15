@@ -78,6 +78,8 @@ public final class EverCropsApi {
         @Override public int amethystGrowthIntervalTicks() { return 6_750; }
         @Override public boolean copperEnabled() { return true; }
         @Override public int copperOxidationIntervalTicks() { return 23_730; }
+        @Override public boolean snifferEggsEnabled() { return true; }
+        @Override public boolean frogspawnEnabled() { return true; }
         @Override public boolean moddedCropsEnabled() { return true; }
         @Override public boolean trackWildVines() { return false; }
         @Override public boolean autoCleanupEnabled() { return true; }

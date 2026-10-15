@@ -25,6 +25,8 @@ import mod.gottsch.forge.evercrops.core.persistence.CropCatchUp;
 import mod.gottsch.forge.evercrops.core.persistence.CropEligibility;
 import mod.gottsch.forge.evercrops.core.persistence.CropRegistry;
 import mod.gottsch.forge.evercrops.api.CropState;
+import mod.gottsch.forge.evercrops.core.catchup.ScheduledCatchUp;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -46,6 +48,9 @@ import java.util.Optional;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.level.BlockEvent;
+import net.neoforged.neoforge.event.level.ChunkDataEvent;
+import net.neoforged.neoforge.event.level.ChunkEvent;
+import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
 
 /**
@@ -221,6 +226,29 @@ public class ModEvents {
             EverCrops.LOGGER.debug("Auto-cleanup: no stale entries in {}.",
                     serverLevel.dimension().location());
         }
+    }
+
+    /**
+     * A saved chunk was read back: remember when it was saved, for scheduled-tick catch-up
+     * (sniffer eggs, frogspawn). The credit is applied when the chunk starts ticking.
+     */
+    @SubscribeEvent
+    public static void onChunkDataLoad(ChunkDataEvent.Load event) {
+        if (event.getChunk() instanceof LevelChunk chunk) {
+            ScheduledCatchUp.onChunkLoaded(chunk, event.getData());
+        }
+    }
+
+    @SubscribeEvent
+    public static void onChunkUnload(ChunkEvent.Unload event) {
+        if (event.getLevel() instanceof ServerLevel level) {
+            ScheduledCatchUp.onChunkUnload(level, event.getChunk().getPos());
+        }
+    }
+
+    @SubscribeEvent
+    public static void onServerStopped(ServerStoppedEvent event) {
+        ScheduledCatchUp.clearAll();
     }
 
     /**
