@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.4.0] - 2026-10-15
+
+### Added
+
+- 🥚 **Sniffer eggs** now keep hatching while you're away. Until now a sniffer egg's countdown simply stopped whenever you left, so you could come back days later to an egg that hadn't moved at all. Now it carries on: leave an egg for a day and you'll come back to a baby sniffer. It hatches on exactly the schedule it would have followed if you'd stayed, including hatching twice as fast on moss.
+- 🐸 **Frogspawn** now keeps counting down while you're away too, and hatches into tadpoles on the same schedule it would have if you'd stayed nearby.
+- Works on eggs and frogspawn that were already in your world before you updated, and EverCrops doesn't need to save anything extra to keep track of them.
+- New **Sniffer eggs** setting (`snifferEggsEnabled`, on by default) and **Frogspawn** setting (`frogspawnEnabled`, on by default) to turn either one off.
+- `/evercrops inspect` on a sniffer egg or frogspawn now shows how far along it is, whether moss is speeding it up, how long until its next step, and how much time away it was given when you came back.
+- `/evercrops simulate` now fast-forwards nearby sniffer eggs and frogspawn too.
+
+---
+
+## [4.3.0] - 2026-09-25
+
+### Added
+
+- 🟫 **Copper** now keeps weathering while you're away. Copper you've left out slowly turns from shiny to exposed, to weathered, and finally to fully green oxidized copper, and now that carries on while you're gone instead of freezing the moment you leave. It happens at exactly the speed it normally would, and that speed depends on what's around it: a lone copper block changes fairly quickly, while copper packed in a big wall of the same shade changes very, very slowly. Just like normal, a copper block won't get ahead of a less-weathered copper block right next to it. This covers every kind of copper block, including cut, chiseled, slabs, stairs, doors, trapdoors, grates and bulbs.
+- **Waxed copper still never changes.** If you want to keep a copper build looking exactly the way you built it, wax it with honeycomb, same as always.
+- New **Copper** setting (`copperEnabled`, on by default) to turn copper catch-up off if you'd rather copper only weathers while you're nearby, plus a setting to tune how fast it happens (`copperOxidationIntervalTicks`).
+- `/evercrops inspect` on a copper block now shows how weathered it is, how much copper is around it, how likely it is to change, roughly how long that will take, and whether a less-weathered block nearby is holding it back.
+
+### Fixed
+
+- Crops, saplings, eggs and amethyst that you were standing right next to could sometimes get a bonus burst of "while you were away" growth even though you never left. Over time this made things near you grow about a third faster than normal. EverCrops now only catches up on growth when an area has really been unloaded, so anything near you grows at exactly the normal speed.
+
+---
+
 ## [4.2.0] - 2026-09-16
 
 ### Added

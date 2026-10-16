@@ -85,6 +85,24 @@ public interface EverCropsConfigView {
      */
     int amethystGrowthIntervalTicks();
 
+    boolean copperEnabled();
+
+    /**
+     * Assumed ticks between copper oxidation attempts. Each attempt then succeeds or not based on the
+     * surrounding copper, rolled live — so this is the pace of <i>opportunities</i>, not of any block
+     * actually oxidizing. See {@code CopperDecision}.
+     */
+    int copperOxidationIntervalTicks();
+
+    /**
+     * Sniffer eggs keep hatching while their chunk is unloaded. They grow on a scheduled tick, not a
+     * random one, so they need no interval: the real schedule is restored exactly.
+     */
+    boolean snifferEggsEnabled();
+
+    /** Frogspawn keeps counting down to hatching while its chunk is unloaded. See {@link #snifferEggsEnabled()}. */
+    boolean frogspawnEnabled();
+
     boolean moddedCropsEnabled();
 
     boolean trackWildVines();

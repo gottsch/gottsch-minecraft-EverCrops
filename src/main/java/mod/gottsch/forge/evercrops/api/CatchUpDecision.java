@@ -54,7 +54,12 @@ public final class CatchUpDecision {
         }
 
         long growthDelta = now - state.getLastGrowthGameTime();
-        if (growthDelta <= avgGrowthInterval * 2L) {
+        if (isTooShortForAnAbsence(callDelta, growthDelta, avgGrowthInterval)) {
+            // Refresh the call clock, or every later ordinary tick would still see this gap and fall
+            // through to here — and once the growth clock aged past the threshold, a block that never
+            // unloaded would be handed "offline" steps. The growth clock is left alone, so for a
+            // genuine short absence the time still counts toward the next real one.
+            state.setLastCallGameTime(now).setLastCallLightLevel(light);
             return 0;
         }
 
@@ -128,8 +133,11 @@ public final class CatchUpDecision {
         }
 
         long growthDelta = now - state.getLastGrowthGameTime();
-        if (growthDelta <= avgGrowthInterval * 2L) {
-            // Not enough time since last growth; leave timestamps untouched (between-threshold).
+        if (isTooShortForAnAbsence(callDelta, growthDelta, avgGrowthInterval)) {
+            // A long gap between calls, but not long enough to be an absence. Refresh the call clock
+            // so the next ordinary call takes the loaded path above, rather than every later call
+            // landing back here until the growth clock ages past the threshold (see computeSteps).
+            state.setLastCallGameTime(now);
             return 0;
         }
 
@@ -137,5 +145,21 @@ public final class CatchUpDecision {
         long remainder = growthDelta % avgGrowthInterval;
         state.setLastGrowthGameTime(now - remainder).setLastCallGameTime(now);
         return quotient;
+    }
+
+    /**
+     * True when a gap since the last call is too short to be treated as the chunk having been
+     * unloaded.
+     *
+     * <p>Random ticks for one block arrive roughly as a Poisson process, so a gap over twice the
+     * average happens on about one tick in seven even while the chunk stays loaded. Treating that as
+     * an absence handed loaded blocks about a third more growth than vanilla. So the gap itself must
+     * exceed twice the growth interval — a loaded gap that long happens around once in e<sup>10</sup>
+     * ticks at amethyst's pace, and rarer still for slower growables — as well as the growth clock
+     * having run that long, as before.
+     */
+    static boolean isTooShortForAnAbsence(long callDelta, long growthDelta, int avgGrowthInterval) {
+        long threshold = avgGrowthInterval * 2L;
+        return callDelta <= threshold || growthDelta <= threshold;
     }
 }

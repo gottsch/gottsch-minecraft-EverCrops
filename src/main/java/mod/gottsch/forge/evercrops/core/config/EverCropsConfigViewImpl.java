@@ -47,6 +47,10 @@ public final class EverCropsConfigViewImpl implements EverCropsConfigView {
     @Override public boolean trackWildTurtleEggs() { return Config.SERVER.trackWildTurtleEggs.get(); }
     @Override public boolean amethystEnabled()     { return Config.SERVER.amethystEnabled.get(); }
     @Override public int amethystGrowthIntervalTicks(){ return Config.SERVER.amethystGrowthIntervalTicks.get(); }
+    @Override public boolean copperEnabled()       { return Config.SERVER.copperEnabled.get(); }
+    @Override public int copperOxidationIntervalTicks(){ return Config.SERVER.copperOxidationIntervalTicks.get(); }
+    @Override public boolean snifferEggsEnabled()  { return Config.SERVER.snifferEggsEnabled.get(); }
+    @Override public boolean frogspawnEnabled()    { return Config.SERVER.frogspawnEnabled.get(); }
     @Override public boolean moddedCropsEnabled()  { return Config.SERVER.moddedCropsEnabled.get(); }
     @Override public boolean trackWildVines()      { return Config.SERVER.trackWildVines.get(); }
     @Override public boolean autoCleanupEnabled()  { return Config.SERVER.autoCleanupEnabled.get(); }

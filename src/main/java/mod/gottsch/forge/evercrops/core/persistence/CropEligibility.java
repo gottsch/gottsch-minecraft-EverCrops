@@ -28,6 +28,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.BuddingAmethystBlock;
 import net.minecraft.world.level.block.CactusBlock;
 import net.minecraft.world.level.block.CaveVinesBlock;
+import net.minecraft.world.level.block.ChangeOverTimeBlock;
 import net.minecraft.world.level.block.ChorusFlowerBlock;
 import net.minecraft.world.level.block.CocoaBlock;
 import net.minecraft.world.level.block.CropBlock;
@@ -77,7 +78,7 @@ public final class CropEligibility {
     private CropEligibility() {}
 
     /** Toggle-routing category for a block state. {@code OTHER} = eligible but not a known vanilla category. */
-    public enum Category { CROPS, STEM, BUSH, COLUMN, SAPLING, BAMBOO, TWISTING, WEEPING, CAVE, CHORUS, EGGS, AMETHYST, OTHER }
+    public enum Category { CROPS, STEM, BUSH, COLUMN, SAPLING, BAMBOO, TWISTING, WEEPING, CAVE, CHORUS, EGGS, AMETHYST, COPPER, OTHER }
 
     // -------------------------------------------------
     // Capability (config-independent)
@@ -109,10 +110,14 @@ public final class CropEligibility {
     /**
      * Property-less growables that have no growth axis to detect but are still tracked:
      * {@link BambooSaplingBlock} (converts to a bamboo stalk on growth) and
-     * {@link BuddingAmethystBlock} (grows buds on its neighbours, never changing its own state).
+     * {@link BuddingAmethystBlock} (grows buds on its neighbours, never changing its own state), and
+     * {@link ChangeOverTimeBlock} — weathering copper, whose stage is the block's identity rather than
+     * a property. Fully oxidized copper stops random-ticking, so it drops out of eligibility on its own.
      */
     public static boolean isSupplementalEligible(Block block) {
-        return block instanceof BambooSaplingBlock || block instanceof BuddingAmethystBlock;
+        return block instanceof BambooSaplingBlock
+                || block instanceof BuddingAmethystBlock
+                || block instanceof ChangeOverTimeBlock<?>;
     }
 
     private static boolean isDenylisted(Block block) {
@@ -165,6 +170,8 @@ public final class CropEligibility {
         // Budding amethyst grows on its neighbours rather than itself, so it has no growth property
         // of its own and reaches eligibility through isSupplementalEligible instead.
         if (block instanceof BuddingAmethystBlock) return Category.AMETHYST;
+        // Weathering copper likewise has no growth property: each oxidation stage is its own block.
+        if (block instanceof ChangeOverTimeBlock<?>) return Category.COPPER;
         return Category.OTHER;
     }
 
@@ -183,6 +190,7 @@ public final class CropEligibility {
             case CHORUS   -> config.chorusFlowerEnabled();
             case EGGS     -> config.turtleEggsEnabled();
             case AMETHYST -> config.amethystEnabled();
+            case COPPER   -> config.copperEnabled();
             case OTHER    -> config.moddedCropsEnabled();
         };
     }
