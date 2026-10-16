@@ -103,6 +103,8 @@ public final class Config {
         public final ForgeConfigSpec.IntValue     amethystGrowthIntervalTicks;
         public final ForgeConfigSpec.BooleanValue copperEnabled;
         public final ForgeConfigSpec.IntValue     copperOxidationIntervalTicks;
+        public final ForgeConfigSpec.BooleanValue snifferEggsEnabled;
+        public final ForgeConfigSpec.BooleanValue frogspawnEnabled;
         public final ForgeConfigSpec.BooleanValue moddedCropsEnabled;
         public final ForgeConfigSpec.ConfigValue<List<? extends String>> denylist;
         public final ForgeConfigSpec.BooleanValue trackWildVines;
@@ -195,6 +197,18 @@ public final class Config {
                              "32000 ticks, while one buried in same-age copper can take millions. Lower = faster offline",
                              "oxidation.")
                     .defineInRange("copperOxidationIntervalTicks", 23_730, 1_000, 2_000_000);
+
+            snifferEggsEnabled = builder
+                    .comment("Enable catch-up hatching for sniffer eggs. When enabled, a sniffer egg keeps cracking (and",
+                             "eventually hatches into a baby sniffer) while its chunk is unloaded, on exactly the schedule",
+                             "vanilla would have followed - about one in-game day, or half that on moss. Nothing extra is",
+                             "saved: EverCrops uses the time the chunk was last saved, which vanilla already records.")
+                    .define("snifferEggsEnabled", true);
+
+            frogspawnEnabled = builder
+                    .comment("Enable catch-up hatching for frogspawn. When enabled, frogspawn keeps counting down while its",
+                             "chunk is unloaded and hatches into tadpoles on the schedule vanilla would have followed.")
+                    .define("frogspawnEnabled", true);
 
             moddedCropsEnabled = builder
                     .comment("Enable catch-up growth for modded growables that pass capability detection (a random-ticking block",

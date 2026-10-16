@@ -39,7 +39,7 @@ When a crop is placed, EverCrops registers it and stamps it with the current gam
 
 ## Compatibility
 
-EverCrops uses **only** `@Inject`, `@Accessor`, and `@Invoker` mixins — no overwrites, no replacements. It introduces **no custom blocks and no block entities**. This makes it broadly compatible with other mixin-based mods and means uninstalling it is safe: your world keeps all its existing crops, they just go back to vanilla behavior.
+EverCrops uses **only** `@Inject`, `@ModifyArg`, `@Accessor`, and `@Invoker` mixins — no overwrites, no replacements. It introduces **no custom blocks and no block entities**. This makes it broadly compatible with other mixin-based mods and means uninstalling it is safe: your world keeps all its existing crops, they just go back to vanilla behavior.
 
 - ✅ Server-side friendly (clients don't need it installed for the growth logic to work)
 - ✅ No worldgen changes

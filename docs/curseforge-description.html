@@ -94,7 +94,7 @@
 
 <h2 style="color:#4CAF50;">Copper</h2>
 
-<p><strong>New:</strong> copper keeps weathering while you're away. Copper slowly goes from shiny to exposed, to weathered, and finally to fully green oxidized &mdash; and now that carries on while you're gone instead of freezing the moment you leave.</p>
+<p>Copper keeps weathering while you're away. Copper slowly goes from shiny to exposed, to weathered, and finally to fully green oxidized &mdash; and now that carries on while you're gone instead of freezing the moment you leave.</p>
 
 <ul>
 <li>Every kind of weathering copper block: full, cut, slabs and stairs &mdash; plus, on 1.21.1, chiseled copper, doors, trapdoors, grates and bulbs.</li>
@@ -107,9 +107,23 @@
 
 <hr/>
 
+<h2 style="color:#4CAF50;">Sniffer eggs and frogspawn</h2>
+
+<p><strong>New:</strong> sniffer eggs and frogspawn keep hatching while you're away. Until now their countdown simply stopped whenever you left &mdash; come back days later and the egg hadn't moved. Now it carries on.</p>
+
+<ul>
+<li>A sniffer egg cracks, cracks again, and hatches into a baby sniffer on exactly the schedule it would have followed if you'd stayed &mdash; about a day, or half that on moss.</li>
+<li>Frogspawn hatches into tadpoles on its normal schedule too.</li>
+<li>Works on eggs and frogspawn already in your world before you updated, and nothing extra is saved to keep track of them.</li>
+<li><code style="background:#eee;padding:2px 4px;">/evercrops inspect</code> shows how far along it is, how long until its next step, and how much time away it was given.</li>
+<li>Toggle them with <code style="background:#eee;padding:2px 4px;">snifferEggsEnabled</code> and <code style="background:#eee;padding:2px 4px;">frogspawnEnabled</code> (both on by default).</li>
+</ul>
+
+<hr/>
+
 <h2 style="color:#4CAF50;">Compatibility</h2>
 
-<p>EverCrops uses <strong>only</strong> <code style="background:#eee;padding:2px 4px;">@Inject</code>, <code style="background:#eee;padding:2px 4px;">@Accessor</code>, and <code style="background:#eee;padding:2px 4px;">@Invoker</code> mixins &mdash; no overwrites, no replacements. It introduces <strong>no custom blocks and no block entities</strong>. This makes it broadly compatible with other mixin-based mods and means uninstalling it is safe: your world keeps all its existing crops, they just go back to vanilla behavior.</p>
+<p>EverCrops uses <strong>only</strong> <code style="background:#eee;padding:2px 4px;">@Inject</code>, <code style="background:#eee;padding:2px 4px;">@ModifyArg</code>, <code style="background:#eee;padding:2px 4px;">@Accessor</code>, and <code style="background:#eee;padding:2px 4px;">@Invoker</code> mixins &mdash; no overwrites, no replacements. It introduces <strong>no custom blocks and no block entities</strong>. This makes it broadly compatible with other mixin-based mods and means uninstalling it is safe: your world keeps all its existing crops, they just go back to vanilla behavior.</p>
 
 <ul>
 <li><span style="color:#4CAF50;"><strong>&#10004;</strong></span> Server-side friendly (clients don't need it installed for the growth logic to work)</li>
@@ -145,7 +159,7 @@
 <tbody>
 <tr>
 <td style="border:1px solid #ccc;padding:6px;"><code style="background:#eee;padding:2px 4px;">/evercrops inspect [pos]</code></td>
-<td style="border:1px solid #ccc;padding:6px;">Print the tracked state at a position &mdash; or where you're standing, if you omit one: block, growth properties, last-call/last-growth game times, light levels, and computed deltas. Beehives, turtle egg nests, budding amethyst and copper report extra detail of their own.</td>
+<td style="border:1px solid #ccc;padding:6px;">Print the tracked state at a position &mdash; or where you're standing, if you omit one: block, growth properties, last-call/last-growth game times, light levels, and computed deltas. Beehives, turtle egg nests, budding amethyst, copper, sniffer eggs and frogspawn report extra detail of their own.</td>
 </tr>
 <tr>
 <td style="border:1px solid #ccc;padding:6px;"><code style="background:#eee;padding:2px 4px;">/evercrops tick &lt;radius&gt;</code></td>
